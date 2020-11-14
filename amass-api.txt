@@ -42,7 +42,6 @@ https://censys.io/domain/help?q=domain%3Akawakatz.com
 https://censys.io/domain/kawakatz.com/table
 https://dns.bufferover.run/dns?q=.kawakatz.com
 https://dnsdumpster.com/
-https://dnsdumpster.com/
 https://freeapi.robtex.com/pdns/forward/kawakatz.com
 https://index.commoncrawl.org/CC-MAIN-2020-24-index?filter=status%3A200&fl=url%2Cstatus&output=json&pageSize=2000&url=%2A.kawakatz.com
 https://index.commoncrawl.org/CC-MAIN-2020-29-index?filter=status%3A200&fl=url%2Cstatus&output=json&pageSize=2000&url=%2A.kawakatz.com
