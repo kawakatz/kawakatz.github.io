@@ -171,8 +171,7 @@ Trusted App Filters is mentioned as below in the article.
 **Link**: [Trusted app filters](https://help.okta.com/oie/en-us/content/topics/identity-engine/authenticators/trusted-app-filters-for-fastpass.htm)
 > Specifically, trusted app filters enable the blocking of unsigned binaries and creating an allowlist of binaries. By preventing unsigned binaries from invoking Okta FastPass, you enhance security against unauthorized or malicious software.
 
-By using Trusted App Filters, you can restrict the applications that are permitted to request signatures on Okta Verify, thereby serving as a countermeasure against the method.
-In the following article, a general explanation of how Trusted App Filters operate is provided while mentioning the method. You can find the explanation specifically in the "How it works" section.  
+By using Trusted App Filters, you can restrict the applications that are permitted to request signatures on Okta Verify, thereby serving as a countermeasure against the attack method. In the following article, a general explanation of how Trusted App Filters operate is provided while mentioning the attack method. You can find the explanation specifically in the "How it works" section.  
 **Link**: [Stay secure with FastPass and Trusted App Filters](https://www.okta.com/blog/2025/04/stay-secure-with-fastpass-and-trusted-app-filters/)
 
 I haven't yet been able to test Trusted App Filters, so I plan to investigate how it works and whether it can be bypassed in the future.
