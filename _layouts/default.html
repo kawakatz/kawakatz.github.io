@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+{% include origin-type.html %} {% include lang.html %} {% if site.theme_mode %}
+{% capture prefer_mode %}data-mode="light"{% endcapture %} {% endif %}
+<!-- `site.alt_lang` can specify a language different from the UI -->
+<html
+  lang="{{ page.lang | default: site.alt_lang | default: site.lang }}"
+  {{
+  prefer_mode
+  }}
+>
+  {% include head.html %}
+  <body>
+    <!-- Google Fonts import -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        width: 100%;
+        font-family: "Open Sans", sans-serif;
+      }
+
+      /* Basic Font Assignments */
+      /* Heading elements */
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        font-family: "Roboto", sans-serif;
+        font-weight: 700;
+        color: #000;
+      }
+
+      h1 {
+        font-size: 2.2rem;
+        font-weight: 900;
+      }
+      h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+      }
+      h3 {
+        font-size: 1.5rem;
+      }
+      h4 {
+        font-size: 1.25rem;
+      }
+
+      /* Main content - more formal styling */
+      main {
+        font-family: "Roboto", sans-serif;
+        line-height: 1.6;
+        font-weight: 400;
+        color: #333;
+        letter-spacing: 0.01em;
+      }
+
+      main p {
+        margin-bottom: 1.5em;
+        text-align: left;
+        font-size: 1rem;
+      }
+
+      main li {
+        margin-bottom: 0.5em;
+        font-size: 1rem; /* 追加：pタグと同じフォントサイズを設定 */
+      }
+
+      main ul,
+      main ol {
+        margin-bottom: 1.5em;
+        padding-left: 2em;
+      }
+
+      main li {
+        margin-bottom: 0.5em;
+      }
+
+      main blockquote {
+        border-left: 3px solid #ddd;
+        padding-left: 1em;
+        font-style: italic;
+        color: #555;
+        margin: 1.5em 0;
+      }
+
+      /* Sidebar */
+      #sidebar {
+        font-family: "Roboto", sans-serif;
+      }
+
+      /* Fix for Font Awesome icons */
+      i.fa,
+      i.fas,
+      i.far,
+      i.fab {
+        font-family: "Font Awesome 5 Free" !important;
+      }
+
+      i.fab {
+        font-family: "Font Awesome 5 Brands" !important;
+      }
+
+      /* サイドバーをダークモードに */
+      #sidebar {
+        width: 330px;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        /* シンプルに黒背景と白文字 */
+        background-color: #000000;
+        color: white;
+      }
+
+      /* サイドバー内の全てのテキストを白に */
+      #sidebar * {
+        color: white;
+      }
+
+      /* サイドバー内のリンクの色 */
+      #sidebar a,
+      #sidebar .nav-link,
+      #sidebar .social-link {
+        color: #ffffff !important;
+      }
+
+      /* 既存の下線スタイルを削除 */
+      #sidebar .nav-link:hover {
+        text-decoration: none !important;
+      }
+
+      /* アニメーション用の下線スタイルを追加 - 完全に独立した方法で実装 */
+      #sidebar .nav-link {
+        position: relative !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+        width: fit-content !important;
+      }
+
+      /* 下線は文字に合わせてスケールするように設定 */
+      #sidebar .nav-link span {
+        position: relative !important;
+      }
+
+      /* テキストコンテンツを span でラップするスクリプト */
+
+      /* 下線の擬似要素を追加（要素ではなくテキストコンテンツにあわせる） */
+      #sidebar .nav-link::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 1px;
+        bottom: 0;
+        left: 50%; /* 中央から始める */
+        transform: translateX(-50%); /* 正確に中央に配置 */
+        background-color: #ffffff;
+        visibility: hidden;
+        transition: all 0.3s ease-in-out;
+      }
+
+      /* ホバー時のアニメーション */
+      #sidebar .nav-link:hover::after {
+        visibility: visible;
+        width: 100%;
+      }
+
+      /* アクティブなリンクの下線を常に表示 */
+      #sidebar .nav .active::after {
+        visibility: visible;
+        width: 100%;
+      }
+
+      /* ソーシャルリンクの背景色を強制的に黒に設定し、枠線を完全に削除 */
+      #sidebar .social-link,
+      #sidebar .sidebar-bottom a,
+      #sidebar [class*="social"] a {
+        background-color: #000000 !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        text-decoration: none !important;
+      }
+
+      /* すべてのアイコンに白色を適用 */
+      #sidebar i,
+      #sidebar svg,
+      #sidebar .fa,
+      #sidebar .fab,
+      #sidebar .fas {
+        color: #ffffff !important;
+        fill: #ffffff !important;
+      }
+
+      /* タブリンクの基本スタイル - ホバーとアクティブスタイルなし */
+      #sidebar .nav-link {
+        text-decoration: none !important;
+        background-color: transparent !important;
+        color: #ffffff !important;
+        position: relative;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: auto !important;
+        box-sizing: content-box !important;
+      }
+
+      /* リンクの配置を調整 */
+      #sidebar .nav-item {
+        text-align: center;
+        margin: 0.5rem 0;
+        position: relative;
+        display: inline-block;
+      }
+
+      #sidebar .nav-item .nav-link {
+        padding: 0.25rem 0 !important;
+        margin: 0 auto !important;
+        display: inline-block !important;
+      }
+
+      /* アクティブなタブの背景を透明に */
+      #sidebar .nav .active {
+        background-color: transparent !important;
+      }
+
+      /* メインコンテンツはライトモード */
+      #main-wrapper {
+        margin-left: 330px;
+        background-color: #ffffff;
+        color: #212529;
+        transition: margin-left 0.3s ease, width 0.3s ease;
+        width: calc(100% - 330px);
+      }
+
+      /* コンテンツに一貫した余白を設定 - パディングを小さく */
+      .content-container {
+        padding-left: 20px !important; /* 余白を小さくして実効コンテンツ幅を広げる */
+        padding-right: 20px !important; /* 余白を小さくして実効コンテンツ幅を広げる */
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+        box-sizing: border-box !important; /* パディングを幅に含める */
+      }
+
+      /* モバイルモードでは余白を調整 */
+      @media (max-width: 900px) {
+        .content-container {
+          padding-left: 15px !important; /* モバイル用に余白をさらに小さく */
+          padding-right: 15px !important;
+        }
+      }
+
+      /* メインとフッターに適用される共通スタイル */
+      .centered-content {
+        width: 100%;
+        max-width: 840px; /* 修正: 800px + 左右パディング(20px×2) */
+        margin: 0 auto;
+        box-sizing: border-box;
+      }
+
+      /* メインコンテンツのサイズ設定 - 横幅の問題を修正 */
+      main.content-container {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+        box-sizing: border-box !important; /* ボックスモデルを明示的に設定 */
+      }
+
+      /* Bootstrapのcolクラスを上書き - パディングを削除 */
+      @media (min-width: 768px) {
+        main.col-md-10 {
+          max-width: 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+          flex: 0 0 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+          width: 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+          box-sizing: border-box !important;
+        }
+      }
+
+      /* dynamic-title の基本スタイル - 共通設定 */
+      .dynamic-title {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        font-family: "Roboto", sans-serif;
+        font-weight: 700;
+      }
+
+      /* 狭いデスクトップ用の追加メディアクエリ - サイドバーは変更せずにメインコンテンツだけ調整 */
+      @media (min-width: 901px) and (max-width: 1130px) {
+        /* メインコンテンツを動的に調整 */
+        main.content-container,
+        #tail-wrapper {
+          max-width: calc(
+            100vw - 360px
+          ) !important; /* ビューポート幅からサイドバー幅+余白を引く */
+          width: auto !important;
+          margin-left: auto !important; /* 修正: 0からautoに変更 */
+          margin-right: auto !important; /* 右マージンは自動のまま */
+        }
+      }
+
+      /* モバイルレイアウト - ブレークポイントは900pxのまま */
+      @media (max-width: 900px) {
+        #sidebar {
+          position: static !important;
+          width: 100% !important;
+          height: auto !important;
+          max-height: none !important;
+          left: 0 !important;
+          right: 0 !important;
+          margin: 0 auto !important;
+          transform: none !important;
+          /* ダークな背景は維持 */
+        }
+
+        #main-wrapper {
+          margin-left: 0 !important;
+          width: 100% !important;
+          /* ライトモードはそのまま維持 */
+        }
+
+        /* モバイルではコンテンツの最大幅を無効化 */
+        .col-12,
+        .col-md-10 {
+          max-width: 100% !important;
+          width: 100% !important;
+          flex: 0 0 100% !important;
+        }
+
+        main,
+        #tail-wrapper {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* プロファイルとulタグの間隔を狭くする */
+        #sidebar .profile-wrapper {
+          margin-top: 0.5rem !important;
+          padding-top: 0.25rem;
+          padding-bottom: 0.25rem;
+        }
+
+        /* subtitle 下の余白をさらに削る */
+        #sidebar .site-subtitle {
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important; /* 必要に応じて追加 */
+        }
+
+        /* dynamic-title のモバイル表示対応 - フォーマットはデスクトップ版と同一に */
+        .dynamic-title {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          overflow: visible !important; /* 表示が切れないようにするための最小限の対応 */
+          white-space: normal !important; /* 長いタイトルが折り返されるようにする */
+        }
+
+        /* モバイル表示時に tab name を持つ li タグの最大幅を設定 */
+        #sidebar ul.nav {
+          margin-top: 0; /* ulタグの上の余白をさらに狭く */
+        }
+        #sidebar ul.nav li {
+          margin: 0 auto; /* liタグを中央寄せするため */
+          padding: 0;
+          line-height: 1;
+          min-height: 0;
+          height: auto;
+          font-size: inherit;
+          max-width: 400px; /* 横幅を400pxに制限 */
+          text-align: center; /* テキストも中央寄せ */
+        }
+      }
+
+      /* 画面幅が最小サイズになっても最小の余白を保証 */
+      @media (max-width: 480px) {
+        .content-container {
+          padding-left: 15px !important;
+          padding-right: 15px !important;
+        }
+      }
+
+      /* あらゆるブレークポイントで余白を強制的に保持 */
+      @media screen and (max-width: 900px) {
+        .container,
+        .container-fluid {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          max-width: 100% !important;
+        }
+
+        main,
+        #tail-wrapper,
+        .content-container {
+          padding-left: 15px !important; /* モバイル用に調整 */
+          padding-right: 15px !important; /* モバイル用に調整 */
+          width: 100% !important;
+          max-width: none !important;
+          flex-basis: 100% !important;
+        }
+
+        .row {
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        /* Bootstrapのグリッドを上書き */
+        .col-12,
+        .col-md-10,
+        .col,
+        [class*="col-"] {
+          width: 100% !important;
+          max-width: 100% !important;
+          flex: 0 0 100% !important;
+        }
+      }
+
+      /* ブレークポイント間の遷移を滑らかに */
+      @media screen and (min-width: 1131px) {
+        main.content-container,
+        #tail-wrapper {
+          width: 100% !important;
+          max-width: 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+      }
+    </style>
+
+    {% include sidebar.html lang=lang %}
+    <div id="main-wrapper">
+      <div class="container d-flex flex-column">
+        {% include topbar.html lang=lang %}
+        <div class="row justify-content-center content-row">
+          <main
+            aria-label="Main Content"
+            class="col-12 col-md-10 content-container centered-content"
+            style="
+              padding-left: 20px !important;
+              padding-right: 20px !important;
+              max-width: 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+              box-sizing: border-box !important;
+            "
+          >
+            {% if layout.refactor or layout.layout == 'default' %} {% include
+            refactor-content.html content=content lang=lang %} {% else %} {{
+            content }} {% endif %}
+          </main>
+        </div>
+        <div class="row justify-content-center content-row">
+          <!-- tail -->
+          <div
+            id="tail-wrapper"
+            class="col-12 col-md-10 content-container centered-content"
+            style="
+              padding-left: 20px !important;
+              padding-right: 20px !important;
+              max-width: 840px !important; /* 修正: 800px + 左右パディング(20px×2) */
+              box-sizing: border-box !important;
+            "
+          >
+            {% for include_item in layout.tail_includes %} {% assign
+            include_path = include_item | append: '.html' %} {% include {{
+            include_path }} lang=lang %} {% endfor %} {% include_cached
+            footer.html lang=lang %}
+          </div>
+        </div>
+        {% include_cached search-results.html lang=lang %}
+      </div>
+      <aside aria-label="Scroll to Top">
+        <button
+          id="back-to-top"
+          type="button"
+          class="btn btn-lg btn-box-shadow"
+        >
+          <i class="fas fa-angle-up"></i>
+        </button>
+      </aside>
+    </div>
+    <div
+      id="mask"
+      class="d-none position-fixed w-100 h-100"
+      style="top: 0; left: 0; background-color: #000; z-index: 999; opacity: 0"
+    ></div>
+    {% if site.pwa.enabled %} {% include_cached notification.html lang=lang %}
+    {% endif %}
+    <!-- Embedded scripts -->
+    {% for include_item in layout.script_includes %} {% assign include_path =
+    include_item | append: '.html' %} {% include {{ include_path }} %} {% endfor
+    %} {% include_cached search-loader.html lang=lang %}
+
+    <!-- ブレークポイントに応じて適切にサイドバーを調整するスクリプト -->
+    <script>
+      // 余白が削除されないように監視する関数 - 修正版
+      function ensurePadding() {
+        const contentContainers =
+          document.querySelectorAll(".content-container");
+        contentContainers.forEach((container) => {
+          // mainタグかどうかを確認
+          const isMainTag = container.tagName.toLowerCase() === "main";
+
+          // モバイルモードかデスクトップモードか
+          if (window.innerWidth <= 900) {
+            // モバイルモード - 固定ピクセル値
+            container.style.paddingLeft = "15px";
+            container.style.paddingRight = "15px";
+          } else {
+            // デスクトップモード - 余白を小さく固定
+            container.style.paddingLeft = "20px";
+            container.style.paddingRight = "20px";
+          }
+
+          // boxSizingを常にborder-boxに設定
+          container.style.boxSizing = "border-box";
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // 定期的に余白を確認
+        setInterval(ensurePadding, 200);
+
+        // メインコンテンツのサイズを調整する関数
+        function adjustMainSize() {
+          const mainContent = document.querySelector("main.content-container");
+          const tailWrapper = document.getElementById("tail-wrapper");
+          const windowWidth = window.innerWidth;
+
+          if (mainContent) {
+            if (windowWidth <= 900) {
+              // モバイルモード
+              mainContent.style.width = "100%";
+              mainContent.style.maxWidth = "100%";
+              mainContent.style.paddingLeft = "15px";
+              mainContent.style.paddingRight = "15px";
+              mainContent.style.marginLeft = "auto";
+              mainContent.style.marginRight = "auto";
+              if (tailWrapper) {
+                tailWrapper.style.width = "100%";
+                tailWrapper.style.maxWidth = "100%";
+                tailWrapper.style.paddingLeft = "15px";
+                tailWrapper.style.paddingRight = "15px";
+                tailWrapper.style.marginLeft = "auto";
+                tailWrapper.style.marginRight = "auto";
+              }
+            } else if (windowWidth > 900 && windowWidth < 1130) {
+              // 狭いデスクトップモード - メインコンテンツだけ調整
+              const dynamicWidth = windowWidth - 360; // サイドバー幅(330px) + 余白(30px)
+
+              mainContent.style.width = "auto";
+              mainContent.style.maxWidth = dynamicWidth + "px";
+              mainContent.style.paddingLeft = "20px";
+              mainContent.style.paddingRight = "20px";
+              mainContent.style.boxSizing = "border-box";
+              mainContent.style.marginLeft = "auto"; /* 修正: 0からautoに変更 */
+              mainContent.style.marginRight = "auto";
+
+              if (tailWrapper) {
+                tailWrapper.style.width = "auto";
+                tailWrapper.style.maxWidth = dynamicWidth + "px";
+                tailWrapper.style.paddingLeft = "20px";
+                tailWrapper.style.paddingRight = "20px";
+                tailWrapper.style.boxSizing = "border-box";
+                tailWrapper.style.marginLeft =
+                  "auto"; /* 修正: 0からautoに変更 */
+                tailWrapper.style.marginRight = "auto";
+              }
+            } else {
+              // 通常デスクトップモード
+              mainContent.style.width = "100%";
+              mainContent.style.maxWidth =
+                "840px"; /* 修正: 800px + 左右パディング(20px×2) */
+              mainContent.style.paddingLeft = "20px";
+              mainContent.style.paddingRight = "20px";
+              mainContent.style.boxSizing = "border-box";
+              mainContent.style.marginLeft = "auto";
+              mainContent.style.marginRight = "auto";
+
+              if (tailWrapper) {
+                tailWrapper.style.width = "100%";
+                tailWrapper.style.maxWidth =
+                  "840px"; /* 修正: 800px + 左右パディング(20px×2) */
+                tailWrapper.style.paddingLeft = "20px";
+                tailWrapper.style.paddingRight = "20px";
+                tailWrapper.style.boxSizing = "border-box";
+                tailWrapper.style.marginLeft = "auto";
+                tailWrapper.style.marginRight = "auto";
+              }
+            }
+          }
+        }
+
+        function adjustLayout() {
+          var sidebar = document.getElementById("sidebar");
+          var mainWrapper = document.getElementById("main-wrapper");
+          var dynamicTitle = document.querySelector(".dynamic-title");
+          var windowWidth = window.innerWidth;
+
+          // メインコンテンツのサイズも調整
+          adjustMainSize();
+
+          if (windowWidth <= 900) {
+            // モバイルレイアウト
+            sidebar.style.position = "static";
+            sidebar.style.width = "100%";
+            sidebar.style.height = "auto";
+            sidebar.style.maxHeight = "none";
+            sidebar.style.left = "0";
+            sidebar.style.right = "0";
+            sidebar.style.margin = "0 auto";
+            sidebar.style.transform = "none";
+
+            mainWrapper.style.marginLeft = "0";
+            mainWrapper.style.width = "100%";
+
+            // dynamic-title の表示を確保（フォーマットは変えない）
+            if (dynamicTitle) {
+              dynamicTitle.style.display = "block";
+              dynamicTitle.style.visibility = "visible";
+              dynamicTitle.style.opacity = "1";
+            }
+          } else {
+            // デスクトップレイアウト - サイドバーは常に330px
+            sidebar.style.position = "fixed";
+            sidebar.style.width = "330px";
+            sidebar.style.height = "100%";
+            sidebar.style.maxHeight = "100%";
+            sidebar.style.left = "0";
+            sidebar.style.right = "auto";
+            sidebar.style.top = "0";
+            sidebar.style.bottom = "0";
+            sidebar.style.margin = "0";
+            sidebar.style.transform = "none";
+
+            mainWrapper.style.marginLeft = "330px";
+            mainWrapper.style.width = "calc(100% - 330px)";
+
+            // dynamic-title のデスクトップ表示設定（元のスタイルを保持）
+            if (dynamicTitle) {
+              // スタイルをリセットする必要がないため、空にしておく
+            }
+          }
+        }
+
+        // Bootstrapのグリッド関連のパディングを削除
+        function fixBootstrapPadding() {
+          // colクラスのパディングをリセット
+          const cols = document.querySelectorAll(".col, [class*='col-']");
+          cols.forEach((col) => {
+            if (
+              col.tagName.toLowerCase() === "main" ||
+              col.id === "tail-wrapper"
+            ) {
+              // mainタグやtail-wrapperのパディングを調整
+              if (window.innerWidth <= 900) {
+                col.style.paddingLeft = "15px";
+                col.style.paddingRight = "15px";
+              } else {
+                col.style.paddingLeft = "20px";
+                col.style.paddingRight = "20px";
+              }
+              col.style.boxSizing = "border-box";
+            } else {
+              // その他のcolクラスのパディングをリセット
+              col.style.paddingLeft = "0";
+              col.style.paddingRight = "0";
+            }
+          });
+        }
+
+        // ナビゲーションリンクのアニメーション下線を設定
+        function setupUnderlineAnimation() {
+          var navLinks = document.querySelectorAll("#sidebar .nav-link");
+
+          navLinks.forEach(function (link) {
+            // リンクにスタイルを追加
+            link.style.position = "relative";
+            link.style.display = "inline-block";
+
+            // mainタグのサイズ問題を修正する
+            adjustMainSize();
+
+            // テキストノードを取得
+            var textNode = Array.from(link.childNodes).find(function (node) {
+              return node.nodeType === 3; // テキストノードの型は3
+            });
+
+            if (textNode) {
+              // テキストノードをspanで囲む
+              var text = textNode.nodeValue;
+              var span = document.createElement("span");
+              span.textContent = text;
+
+              // 元のテキストノードをspanに置き換え
+              link.replaceChild(span, textNode);
+
+              // アニメーション用の下線要素を作成
+              var underline = document.createElement("span");
+              underline.className = "nav-underline";
+              underline.style.position = "absolute";
+              underline.style.bottom = "0";
+              underline.style.left = "0";
+              underline.style.width = "0";
+              underline.style.height = "1px";
+              underline.style.backgroundColor = "#ffffff";
+              underline.style.transition = "width 0.3s ease-in-out";
+
+              // spanの幅に合わせる
+              span.style.position = "relative";
+
+              // 下線要素を追加
+              link.appendChild(underline);
+
+              // ホバーイベントを設定
+              link.addEventListener("mouseenter", function () {
+                underline.style.width = span.offsetWidth + "px";
+              });
+
+              link.addEventListener("mouseleave", function () {
+                if (!link.classList.contains("active")) {
+                  underline.style.width = "0";
+                }
+              });
+
+              // アクティブなリンクは常に下線表示
+              if (
+                link.classList.contains("active") ||
+                link.parentNode.classList.contains("active")
+              ) {
+                underline.style.width = span.offsetWidth + "px";
+              }
+            }
+          });
+        }
+
+        // 初期ロード時に実行
+        adjustLayout();
+        setupUnderlineAnimation();
+        fixBootstrapPadding();
+
+        // ウィンドウサイズ変更時に実行
+        window.addEventListener("resize", function () {
+          adjustLayout();
+          ensurePadding(); // リサイズ時にも余白を確認
+          adjustMainSize(); // リサイズ時にもメインコンテンツのサイズを調整
+          fixBootstrapPadding(); // リサイズ時にもBootstrapパディングを修正
+        });
+      });
+    </script>
+    <style>
+      /* モバイル表示時のみ（サイドバーが上部に表示される場合）の間隔調整 */
+      @media (max-width: 900px) {
+        /* プロファイルセクションの調整 */
+        #sidebar .profile-wrapper {
+          margin-top: 1rem !important;
+          padding-top: 0.5rem;
+          padding-bottom: 0.5rem;
+        }
+
+        /* プロファイル画像の調整 */
+        #sidebar .profile-wrapper .avatar {
+          margin-bottom: 0.5rem;
+        }
+
+        /* タイトルの調整 */
+        #sidebar .site-title {
+          margin-top: 0.25rem;
+          margin-bottom: 0.25rem;
+        }
+
+        /* サブタイトルの調整 */
+        #sidebar .site-subtitle {
+          margin-top: 0;
+          margin-bottom: 0;
+        }
+
+        /* dynamic-title のモバイル表示調整 - フォーマットを維持 */
+        .dynamic-title {
+          overflow: visible;
+          white-space: normal;
+          text-overflow: clip;
+        }
+
+        /* topbar 内の dynamic-title が存在する場合の対応 - フォーマットを維持 */
+        #topbar .dynamic-title,
+        .topbar .dynamic-title {
+          display: block !important;
+          visibility: visible !important;
+        }
+
+        /* コンタクト情報を非表示に - 複数のセレクタで対応 */
+        #sidebar .sidebar-bottom,
+        #sidebar .contact,
+        #sidebar .social-links,
+        #sidebar .social,
+        #sidebar [class*="contact"],
+        #sidebar [class*="social"] {
+          display: none !important; /* !important を使用して他のスタイルを上書き */
+        }
+
+        /* タブ名の間隔調整 */
+        #sidebar ul.nav {
+          margin-top: 0.25rem;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        #sidebar .nav-item {
+          margin: 0;
+        }
+
+        /* リスト要素の高さと間隔を完全に削除 */
+        #sidebar li {
+          margin: 0;
+          padding: 0;
+          line-height: 1;
+          min-height: 0;
+          height: auto;
+          font-size: inherit;
+        }
+
+        /* ネストされたリストの間隔調整 */
+        #sidebar ul,
+        #sidebar ol {
+          padding-left: 1rem;
+          margin: 0;
+          line-height: 1;
+        }
+
+        /* ulタグの下に余白を追加 - 増量 */
+        #sidebar ul {
+          margin-bottom: 1rem;
+        }
+
+        /* 全体的な余白調整 */
+        #sidebar .sidebar-bottom .row {
+          margin-top: 0.25rem;
+        }
+
+        /* ソーシャルリンクの間隔調整 */
+        #sidebar .sidebar-bottom .social-link {
+          margin-bottom: 0.25rem;
+        }
+      }
+
+      /* Additional site elements with Roboto */
+      .site-title,
+      .post-title,
+      .page-title,
+      .category-title,
+      .tag-title,
+      .archive-title {
+        font-family: "Roboto", sans-serif;
+        font-weight: 700;
+      }
+    </style>
+  </body>
+</html>

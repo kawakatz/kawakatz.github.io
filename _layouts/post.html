@@ -1,0 +1,76 @@
+---
+layout: default
+refactor: true
+script_includes:
+  - comment
+---
+
+{% include lang.html %} {% include toc-status.html %}
+
+<article class="px-1">
+  <header>
+    <h1 data-toc-skip>{{ page.title }}</h1>
+
+    <div class="post-meta text-muted">
+      <!-- Date row with flexbox layout -->
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <!-- published date -->
+          <span>
+            {{ site.data.locales[lang].post.posted }} {% include datetime.html
+            date=page.date tooltip=true lang=lang %}
+          </span>
+
+          <!-- lastmod date -->
+          {% if page.last_modified_at and page.last_modified_at != page.date %}
+          <span>
+            {{ site.data.locales[lang].post.updated }} {% include datetime.html
+            date=page.last_modified_at tooltip=true lang=lang %}
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- read time on the right -->
+        <div>
+          {% include read-time.html content=content prompt=true lang=lang %}
+        </div>
+      </div>
+
+      <!-- pageviews in a separate row if needed -->
+      {% if site.pageviews.provider and
+      site.analytics[site.pageviews.provider].id %}
+      <div class="mt-2">
+        <span>
+          <em id="pageviews">
+            <i class="fas fa-spinner fa-spin small"></i>
+          </em>
+          {{ site.data.locales[lang].post.pageview_measure }}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="content">{{ content }}</div>
+</article>
+
+<style>
+  /* Reading time style adjustments */
+  .post-meta .words {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* Mobile layout adjustments */
+  @media (max-width: 576px) {
+    .post-meta .d-flex {
+      flex-direction: column;
+      align-items: flex-start !important;
+    }
+
+    .post-meta .words {
+      margin-left: 0;
+      margin-top: 0.5rem;
+    }
+  }
+</style>
