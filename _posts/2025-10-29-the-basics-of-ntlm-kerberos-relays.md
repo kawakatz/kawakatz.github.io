@@ -219,7 +219,7 @@ netexec smb <dc ip> -u Administrator -H <hash>
   <div style="font-style: italic; color: #666; margin-top: 0px;">Performing DCSync</div>
 </div>
 
-The image in [The Hacker Recipes](https://www.thehacker.recipes/ad/movement/ntlm/relay) makes it easy to understand these conditions for NTLM relay to LDAP/LDAPS.
+The image in ["NTLM relay"](https://www.thehacker.recipes/ad/movement/ntlm/relay) on The Hacker Recipes makes it easy to understand these conditions for NTLM relay to LDAP/LDAPS.
 
 <p style="margin-bottom:0.25em">
 It's important to mention the Intranet Zone. If a URL is handled as an Intranet Zone, WebDAV clients automatically start authentication. The most important rule is described in <a href="https://specterops.io/blog/2025/04/08/the-renaissance-of-ntlm-relay-attacks-everything-you-need-to-know/">"The Renaissance of NTLM Relay Attacks: Everything You Need to Know"</a> by SpecterOps.
