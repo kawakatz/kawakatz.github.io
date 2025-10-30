@@ -8,7 +8,7 @@ image:
     path: /assets/img/20251029/84.png
 ---
 
-I just want to clarify conditions and steps to exploit relay attacks. Each technique is already described in other amazing articles. The basics of relay attacks are described in ["NTLM Relay"](https://en.hackndo.com/ntlm-relay/) by Pixis. If you are not familiar with relay attacks, I recommend reading the article.
+I just want to clarify conditions and steps to exploit relay attacks. Each technique has already been described in other amazing articles. The basics of relay attacks are described in ["NTLM Relay"](https://en.hackndo.com/ntlm-relay/) by Pixis. If you are not familiar with relay attacks, I recommend reading this article.
 
 ## Table of Contents
 1. [Lab](#lab)
@@ -41,13 +41,13 @@ The goal is to escalate from coward to Administrator.
 
 ## NTLM Relay to SMB
 #### Prerequisites
-SMB signing must not be enforced to perform the relay attack. Historically, only domain controllers required SMB signing by default. However, since Windows Server 2025 and Windows 11 24H2, SMB signing has been required by default for all SMB connections.
+SMB signing must not be required to perform the relay attack. Historically, only domain controllers required SMB signing by default. However, since Windows Server 2025 and Windows 11 24H2, SMB signing has been required by default for all SMB connections.
 ```sh
 netexec smb dc2.kawakatz.local
 ```
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/3.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">SMB signing is not enforced</div>
+  <div style="font-style: italic; color: #666; margin-top: 0px;">SMB signing is not required</div>
 </div>
 
 #### Examples
@@ -85,13 +85,13 @@ sudo python3 ntlmrelayx.py -smb2support -t smb://dc2.kawakatz.local -c whoami
 
 ## NTLM Relay to LDAP/LDAPS
 #### Prerequisites
-LDAP signing or LDAP channel binding must not be enforced to perform the relay attack. Historically this was the default. However, since Windows Server 2025, LDAP signing is enforced by default and channel binding is enabled in "When supported" mode. We can check these settings with [LdapRelayScan](https://github.com/zyn3rgy/LdapRelayScan). [This patch](https://github.com/zyn3rgy/LdapRelayScan/pull/27) may be required to support LDAPS. Additionally, some other complicated conditions must also be met as described below.
+LDAP signing or LDAP channel binding must not be required to perform the relay attack. Historically this was the default. However, since Windows Server 2025, LDAP signing is required by default and channel binding is enabled in "When supported" mode. We can check these settings with [LdapRelayScan](https://github.com/zyn3rgy/LdapRelayScan). [This patch](https://github.com/zyn3rgy/LdapRelayScan/pull/27) may be required to support LDAPS. Additionally, some other complicated conditions must also be met as described below.
 ```sh
 python3 LdapRelayScan.py -method BOTH -dc-ip <dc ip> -u coward -p 'P@ssw0rd'
 ```
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/31.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP signing and LDAP channel binding are not enforced</div>
+  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP signing and LDAP channel binding are not required</div>
 </div>
 
 #### Examples
@@ -172,7 +172,7 @@ sudo python3 smbclient.py -k -no-pass kawakatz.local/Administrator@dc1.kawakatz.
   <div style="font-style: italic; color: #666; margin-top: 0px;">Impersonating Administrator</div>
 </div>
 
-We can also exploit NTLM relay to LDAP/LDAPS using the Shadow Credentials technique as follows, especially when we cannot add a computer account. For more details on Shadow Credentials and the technique to generate silver tickets, see ["Shadow Credentials"](https://www.thehacker.recipes/ad/movement/kerberos/shadow-credentials), ["UnPAC the hash"](https://www.thehacker.recipes/ad/movement/kerberos/unpac-the-hash), and ["Silver tickets"](https://www.thehacker.recipes/ad/movement/kerberos/forged-tickets/silver) from The Hacker Recipes.
+When we cannot add a computer account, we can instead exploit NTLM relay to LDAP/LDAPS using the Shadow Credentials technique, as follows. For more details on Shadow Credentials and the technique to generate silver tickets, see ["Shadow Credentials"](https://www.thehacker.recipes/ad/movement/kerberos/shadow-credentials), ["UnPAC the hash"](https://www.thehacker.recipes/ad/movement/kerberos/unpac-the-hash), and ["Silver tickets"](https://www.thehacker.recipes/ad/movement/kerberos/forged-tickets/silver) from The Hacker Recipes.
 ```sh
 # NTLM relay to LDAP for Shadow Credentials
 sudo python3 ntlmrelayx.py -smb2support -t ldap://dc2.kawakatz.local --remove-mic --shadow-credentials --shadow-target 'DC1$' --no-dump --no-da --no-acl --no-validate-privs
@@ -289,7 +289,7 @@ python3 PetitPotam.py -u coward -p 'P@ssw0rd' -d kawakatz.local <attacker ip>@80
 
 ## NTLM Relay to HTTP/HTTPS
 #### Prerequisites
-HTTP is generally vulnerable to relay attacks. EPA (Extended Protection for Authentication) must not be enforced to perform the relay attack. [Certipy](https://github.com/ly4k/Certipy) can be used to check EPA settings. Although Certipy is a toolkit for ADCS, the logic of [the check_channel_binding function](https://github.com/ly4k/Certipy/blob/main/certipy/commands/find.py#L684) can also be applied to general HTTPS endpoints.
+HTTP is generally vulnerable to relay attacks. EPA (Extended Protection for Authentication) must not be required to perform the relay attack. [Certipy](https://github.com/ly4k/Certipy) can be used to check EPA settings. Although Certipy is a toolkit for ADCS, the logic of [the check_channel_binding function](https://github.com/ly4k/Certipy/blob/main/certipy/commands/find.py#L684) can also be applied to general HTTPS endpoints.
 ```sh
 certipy find -u coward -p 'P@ssw0rd' -dc-ip <dc ip>
 ```
@@ -347,7 +347,7 @@ netexec smb <dc ip> -u Administrator -H <hash>
 
 ## NTLM Relay to WinRM/WinRMS
 #### Prerequisites
-Generally speaking, NTLM relay to WinRM is impossible because the protocol has its own encryption protecting against relay attacks. However, WinRMS (WinRM over HTTPS) relies on TLS for encryption. This makes it vulnerable to relay attacks if NTLMv1 is allowed (LmCompatibilityLevel <= 2) on DC1. Even when relaying over HTTP, NTLMv1 is still required, unlike LDAP/LDAPS. This is because CbtHardeningLevel for WinRMS is not "None" but "Relaxed". WinRMS attempts to use CBT if it receives NTLMv2 authentication. ["Is TLS more secure, the WinRMS case."](https://blog.whiteflag.io/blog/is-tls-more-secured-the-winrms-case/) provides a good reference.
+Generally speaking, NTLM relay to WinRM is impossible because the protocol has its own encryption protecting against relay attacks. However, WinRM/S (WinRM over HTTPS) relies on TLS for encryption. This makes it vulnerable to relay attacks if NTLMv1 is allowed (LmCompatibilityLevel <= 2) on DC1. Even when relaying over HTTP, NTLMv1 is still required, unlike LDAP/LDAPS. This is because CbtHardeningLevel for WinRMS is not "None" but "Relaxed". WinRMS attempts to use CBT if it receives NTLMv2 authentication. ["Is TLS more secure, the WinRMS case."](https://blog.whiteflag.io/blog/is-tls-more-secured-the-winrms-case/) provides a good reference.
 
 #### Examples
 ```sh
@@ -633,7 +633,7 @@ We can verify the behavior, and we can see that krbrelayx.py cannot continue the
 ## Mitigations
 #### SMB
 <p style="margin-bottom:0.25em">
-You need to enforce SMB signing on all servers and clients.  
+You need to require SMB signing on all servers and clients.  
 </p>
 ```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
@@ -646,7 +646,7 @@ Value:  Enabled
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/74.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">SMB signing is enforced</div>
+  <div style="font-style: italic; color: #666; margin-top: 0px;">SMB signing is required</div>
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/75.png" width="800" style="border: 1px solid black;" alt=""/>
@@ -655,7 +655,7 @@ Value:  Enabled
 
 #### LDAP/LDAPS
 <p style="margin-bottom:0.25em">
-You need to enforce LDAP signing and LDAP channel binding.  
+You need to require LDAP signing and LDAP channel binding.  
 </p>
 ```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
@@ -678,7 +678,7 @@ Value:  Always
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/76.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP signing and LDAP channel binding are enforced</div>
+  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP signing and LDAP channel binding are required</div>
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/77.png" width="800" style="border: 1px solid black;" alt=""/>
@@ -690,7 +690,7 @@ Value:  Always
 </div>
 
 #### HTTP/HTTPS
-You need to disable HTTP and enforce EPA on HTTPS.
+You need to disable HTTP and require EPA on HTTPS.
 <div style="text-align: center; margin: -1em 0 20px 0;">
   <img src="/assets/img/20251029/70.png" width="600" style="border: 1px solid black;" alt=""/>
   <div style="font-style: italic; color: #666; margin-top: 0px;">Disabling HTTP</div>
@@ -701,7 +701,7 @@ You need to disable HTTP and enforce EPA on HTTPS.
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/79.png" width="550" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">HTTP is disabled and EPA is enforced</div>
+  <div style="font-style: italic; color: #666; margin-top: 0px;">HTTP is disabled and EPA is required</div>
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/80.png" width="800" style="border: 1px solid black;" alt=""/>
@@ -720,10 +720,10 @@ You need to update CbtHardeningLevel to "Strict".
 </div>
 
 #### MSSQL
-You need to enforce EPA on all servers.
+You need to required EPA on all servers.
 <div style="text-align: center; margin: -1em 0 20px 0;">
   <img src="/assets/img/20251029/73.png" width="600" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Enforce EPA</div>
+  <div style="font-style: italic; color: #666; margin-top: 0px;">Require EPA</div>
 </div>
 <div style="text-align: center; margin: 20px 0;">
   <img src="/assets/img/20251029/82.png" width="800" style="border: 1px solid black;" alt=""/>
