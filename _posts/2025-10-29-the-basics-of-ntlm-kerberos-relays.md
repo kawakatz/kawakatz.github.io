@@ -104,7 +104,7 @@ So, to perform NTLM relay over SMB to LDAP/LDAPS, more conditions must be met. W
 - DC1 allows NTLMv1 authentication (LmCompatibilityLevel<sup>*</sup> <= 2)
 
 <p style="margin-bottom:0em"><em>* LmCompatibilityLevel</em></p>
-```text
+```registry
 Key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa  
 Name: LMCompatibilityLevel  
 Type: REG_DWORD  
@@ -635,7 +635,7 @@ We can verify the behavior, and we can see that krbrelayx.py cannot continue the
 <p style="margin-bottom:0.25em">
 You need to require SMB signing on all servers and clients.  
 </p>
-```text
+```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
 Policy: Microsoft network server: Digitally sign communications (always)
 Value:  Enabled
@@ -657,7 +657,7 @@ Value:  Enabled
 <p style="margin-bottom:0.25em">
 You need to require LDAP signing and LDAP channel binding.  
 </p>
-```text
+```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
 Policy: Domain controller: LDAP server signing requirements
 Value:  Require signing
@@ -667,7 +667,7 @@ Value:  Require signing
   <div style="font-style: italic; color: #666; margin-top: 0px;">Enforcing LDAP signing</div>
 </div>
 
-```text
+```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
 Policy: Domain controller: LDAP server channel binding token requirements
 Value:  Always
@@ -734,7 +734,7 @@ You need to required EPA on all servers.
 <p style="margin-bottom:0.25em">
 You also need to disable NTLMv1.  
 </p>
-```text
+```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
 Policy: Network security: LAN Manager authentication level  
 Value:  Send NTLMv2 response only. Refuse LM & NTLM
