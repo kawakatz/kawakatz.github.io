@@ -1,6 +1,10 @@
+---
+layout: compress
+---
+
 <!DOCTYPE html>
 {% include origin-type.html %} {% include lang.html %} {% if site.theme_mode %}
-{% capture prefer_mode %}data-mode="light"{% endcapture %} {% endif %}
+{% capture prefer_mode %}data-mode="{{ site.theme_mode }}"{% endcapture %} {% endif %}
 <!-- `site.alt_lang` can specify a language different from the UI -->
 <html
   lang="{{ page.lang | default: site.alt_lang | default: site.lang }}"
