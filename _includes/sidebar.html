@@ -1,6 +1,6 @@
 <!-- The Side Bar -->
 
-<aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-center text-center px-0">
+<aside aria-label="Sidebar" id="sidebar" class="d-flex flex-column align-items-center text-center">
   <header class="profile-wrapper">
     <a href="{{ '/' | relative_url }}" id="avatar" class="rounded-circle">
       {%- if site.avatar != empty and site.avatar -%}
@@ -17,7 +17,7 @@
   <!-- .profile-wrapper -->
 
   <!-- Contact links: shown above the nav (upstream Chirpy places them at the bottom) -->
-  <div class="sidebar-bottom d-flex flex-wrap justify-content-center align-items-center w-100 px-0 mx-0">
+  <div class="sidebar-bottom d-flex flex-wrap justify-content-center align-items-center w-100">
     {% unless site.theme_mode %}
       <button type="button" class="btn btn-link nav-link" aria-label="Switch Mode" id="mode-toggle">
         <i class="fas fa-adjust"></i>

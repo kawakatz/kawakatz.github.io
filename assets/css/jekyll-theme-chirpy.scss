@@ -145,6 +145,8 @@ i.fab {
   top: 0;
   bottom: 0;
   z-index: 1000;
+  padding-left: 0;
+  padding-right: 0;
   background-color: #000;
   color: #fff;
 }
@@ -186,6 +188,12 @@ i.fab {
   #tail-wrapper {
     padding-right: $content-gutter !important;
   }
+}
+
+/* Footer: gap between the copyright line and the bottom edge
+   (the theme itself sets footer p { margin-bottom: 0 }) */
+footer p {
+  margin-bottom: 0.5rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -248,7 +256,9 @@ i.fab {
   /* Contact icons (placed above the nav): flat white icons on black,
      without the theme's circular button look */
   .sidebar-bottom {
-    margin-bottom: 0.25rem;
+    padding-left: 0; // the theme indents this block for its bottom-left position
+    padding-right: 0;
+    margin: 0 0 0.25rem;
 
     a {
       background-color: #000 !important; // theme uses a button background

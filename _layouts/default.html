@@ -67,6 +67,11 @@
       {% include {{ _include_path }} %}
     {% endfor %}
 
-    {% include_cached search-loader.html lang=lang %}
+    {% comment %}
+      Unlike upstream Chirpy, search-loader.html is NOT included: this site has
+      no search UI (the top bar is hidden), so the search index is never
+      fetched. The hidden search markup above is kept only because the theme's
+      JavaScript expects those elements to exist.
+    {% endcomment %}
   </body>
 </html>

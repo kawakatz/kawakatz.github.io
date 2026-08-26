@@ -5,7 +5,7 @@ description: A technical overview of NTLM and Kerberos relay attacks
 
 date: 2025-10-29 06:00:00 +0900
 image:
-    path: /assets/img/20251029/84.png
+    path: /assets/img/20251029/84-thumb.png
 ---
 
 I just want to clarify conditions and steps to exploit relay attacks. Each technique has already been described in other amazing articles. The basics of relay attacks are described in ["NTLM Relay"](https://en.hackndo.com/ntlm-relay/) by Pixis. If you are not familiar with relay attacks, I recommend reading this article.

@@ -5,7 +5,7 @@ description: The macOS security mechanisms against Oktat Terrify and how to abus
 
 date: 2025-04-12 01:30:00 +0900
 image:
-    path: /assets/img/20250412/18.png
+    path: /assets/img/20250412/18-thumb.png
 ---
 
 Hello.    
