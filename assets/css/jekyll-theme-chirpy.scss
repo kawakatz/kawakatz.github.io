@@ -249,7 +249,9 @@ footer p {
 
   .site-subtitle {
     white-space: pre; // the tagline is two lines
-    margin-bottom: 0.5rem;
+    // 1.25rem makes the VISUAL text-to-icon gap match the icon-to-menu gap
+    // (the icon buttons carry internal whitespace below their glyphs)
+    margin-bottom: 1.25rem;
     color: #fff !important;
   }
 
@@ -540,7 +542,9 @@ footer p {
     }
 
     ul {
-      margin-bottom: 1rem;
+      // 1.25rem keeps ~20px below the active tab's underline (the underline
+      // sits 4px under the text), matching the visual gap between the tabs
+      margin-bottom: 1.25rem;
     }
 
     ul.nav {
