@@ -1,0 +1,566 @@
+---
+---
+
+/* prettier-ignore */
+@use 'main
+{%- if jekyll.environment == 'production' -%}
+  .bundle
+{%- endif -%}
+';
+
+/* ==========================================================================
+   kawakatz.io customizations
+
+   Everything below overrides the Chirpy theme (compiled above) and the
+   Bootstrap stylesheet loaded from the CDN in head.html. These rules were
+   consolidated from the inline <style> blocks and style attributes that
+   used to live in _layouts/default.html, _layouts/home.html,
+   _layouts/post.html and _includes/sidebar.html.
+
+   Layout summary:
+     - fixed black sidebar (330px) on the left, light main content
+     - content column is centered, max 840px (800px + 20px padding x2)
+     - <= 900px:          sidebar stacks on top, content is full width
+     - 901px - 1130px:    content column shrinks with the viewport
+     - >= 1131px:         content column is fixed at 840px
+
+   A few rules keep `!important`: they need to beat either Bootstrap
+   utility classes (which are themselves `!important`) or high-specificity
+   theme selectors. Each one is commented.
+   ========================================================================== */
+
+$sidebar-width: 330px;
+$content-max-width: 840px; // 800px of content + 20px padding on each side
+$content-gutter: 20px;
+$content-gutter-mobile: 15px;
+$bp-mobile: 900px; // <= : stacked mobile layout
+$bp-narrow: 1130px; // 901px - 1130px: fluid content width
+
+/* --------------------------------------------------------------------------
+   Base typography
+   -------------------------------------------------------------------------- */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  font-family: 'Open Sans', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  color: #000;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 900;
+}
+
+h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+.site-title,
+.post-title,
+.page-title,
+.category-title,
+.tag-title,
+.archive-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+}
+
+main {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #333;
+  letter-spacing: 0.01em;
+
+  p {
+    margin-bottom: 1.5em;
+    text-align: left;
+    font-size: 1rem;
+  }
+
+  ul,
+  ol {
+    margin-bottom: 1.5em;
+    padding-left: 2em;
+  }
+
+  li {
+    margin-bottom: 0.5em;
+    font-size: 1rem; // same size as paragraphs
+  }
+
+  blockquote {
+    border-left: 3px solid #ddd;
+    padding-left: 1em;
+    font-style: italic;
+    color: #555;
+    margin: 1.5em 0;
+  }
+}
+
+/* Font Awesome icons: `!important` restores the icon fonts against the
+   font-family overrides above. */
+i.fa,
+i.fas,
+i.far,
+i.fab {
+  font-family: 'Font Awesome 5 Free' !important;
+}
+
+i.fab {
+  font-family: 'Font Awesome 5 Brands' !important;
+}
+
+/* --------------------------------------------------------------------------
+   Layout skeleton: fixed sidebar + light main area
+   -------------------------------------------------------------------------- */
+
+#sidebar {
+  width: $sidebar-width;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  background-color: #000;
+  color: #fff;
+}
+
+#main-wrapper {
+  margin-left: $sidebar-width;
+  width: calc(100% - #{$sidebar-width});
+  background-color: #fff;
+  color: #212529;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+/* The site has no top bar, but the markup is kept (hidden) because the
+   theme's JavaScript expects its elements to exist. */
+#topbar-wrapper {
+  display: none;
+}
+
+/* Shared column for the main content and the tail (footer) wrapper */
+.content-container {
+  width: 100%;
+  max-width: $content-max-width;
+  margin: 0 auto;
+  padding: 2rem $content-gutter;
+  box-sizing: border-box;
+}
+
+/* Narrow desktop: shrink the content column with the viewport
+   (sidebar width + 30px of breathing room) */
+@media (min-width: 901px) and (max-width: $bp-narrow) {
+  .content-container {
+    max-width: calc(100vw - #{$sidebar-width + 30px});
+  }
+}
+
+/* Very wide screens: the theme forces extra right padding on #tail-wrapper
+   (>= 1650px); keep our uniform gutter instead. */
+@media (min-width: 1650px) {
+  #tail-wrapper {
+    padding-right: $content-gutter !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar
+   -------------------------------------------------------------------------- */
+
+#sidebar {
+  font-family: 'Roboto', sans-serif;
+
+  /* All sidebar text and icons are white, in every state. `!important`
+     beats the theme's hover/active color rules. */
+  * {
+    color: #fff;
+  }
+
+  a,
+  .nav-link {
+    color: #fff !important;
+  }
+
+  i,
+  svg,
+  .fa,
+  .fab,
+  .fas {
+    color: #fff !important;
+    fill: #fff !important;
+  }
+
+  .profile-wrapper {
+    margin-top: 10.5rem;
+    margin-bottom: 0.25rem;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+  }
+
+  #avatar {
+    display: inline-block;
+
+    img {
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto;
+    }
+  }
+
+  .site-title {
+    width: 100%; // theme uses fit-content, which would left-align the block
+    margin-bottom: 0;
+    color: #fff !important; // theme changes the color on hover
+  }
+
+  .site-subtitle {
+    white-space: pre; // the tagline is two lines
+    margin-bottom: 0.5rem;
+    color: #fff !important;
+  }
+
+  /* Contact icons (placed above the nav): flat white icons on black,
+     without the theme's circular button look */
+  .sidebar-bottom {
+    margin-bottom: 0.25rem;
+
+    a {
+      background-color: #000 !important; // theme uses a button background
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important; // theme draws a ring with box-shadow
+      text-decoration: none !important;
+    }
+  }
+
+  /* Navigation tabs: plain centered text links with an animated underline.
+     `!important` beats the theme's high-specificity nav styles
+     (`#sidebar ul li.nav-item a.nav-link`) and the Bootstrap `w-100`
+     utility on the links. */
+  .nav-item {
+    text-align: center;
+    margin: 0.5rem 0;
+    position: relative;
+    display: inline-block;
+  }
+
+  .nav-link {
+    position: relative !important;
+    display: inline-block !important;
+    width: auto !important;
+    padding: 0.25rem 0 !important;
+    margin: 0 auto !important;
+    background-color: transparent !important;
+    text-decoration: none !important;
+
+    /* Animated underline, sized to the link text */
+    &::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 1px;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #fff;
+      visibility: hidden;
+      transition: all 0.3s ease-in-out;
+    }
+
+    &:hover::after {
+      visibility: visible;
+      width: 100%;
+    }
+  }
+
+  /* The active tab keeps its underline and loses the theme's pill background */
+  .nav .active {
+    background-color: transparent !important;
+  }
+
+  .nav-item.active .nav-link::after {
+    visibility: visible;
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Home: post cards
+   -------------------------------------------------------------------------- */
+
+.card-wrapper {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+
+    .post-preview img {
+      transform: scale(1.03);
+    }
+
+    .card-title span {
+      background-size: 100% 2px;
+    }
+  }
+}
+
+.post-preview img {
+  object-fit: cover;
+  height: 100%;
+  min-height: 220px;
+  transition: transform 0.3s ease;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1.4rem;
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+
+  /* Animated gradient underline on hover (see .card-wrapper:hover above) */
+  span {
+    background-image: linear-gradient(#4285f4, #4285f4);
+    background-size: 0 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.5s ease;
+    display: inline;
+  }
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.card-text {
+  color: #555;
+  line-height: 1.6;
+}
+
+.category-tag {
+  display: inline-block;
+  background: #f5f5f5;
+  padding: 3px 8px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  margin-right: 5px;
+  transition: background 0.3s ease, color 0.3s ease;
+
+  &:hover {
+    background: #4285f4;
+    color: #fff;
+  }
+}
+
+.pin {
+  background: #ff3860;
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+
+  i {
+    margin-right: 5px;
+  }
+}
+
+.post-meta {
+  font-size: 0.85rem;
+  color: #666;
+
+  i {
+    color: #888;
+  }
+}
+
+.reading-time {
+  margin-left: 15px;
+}
+
+/* --------------------------------------------------------------------------
+   Post pages: meta row
+   -------------------------------------------------------------------------- */
+
+.post-meta .words {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+  .post-meta .d-flex {
+    flex-direction: column;
+    align-items: flex-start !important; // beats the align-items-center utility
+  }
+
+  .post-meta .words {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Tab pages (e.g. /others/): page title
+   -------------------------------------------------------------------------- */
+
+.dynamic-title {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile layout (<= 900px): sidebar stacks on top of the content
+   -------------------------------------------------------------------------- */
+
+@media (max-width: $bp-mobile) {
+  #sidebar {
+    position: static !important; // theme slides the sidebar off-canvas below 850px
+    transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto !important;
+  }
+
+  #main-wrapper {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .container {
+    padding-left: 0;
+    padding-right: 0;
+    max-width: 100%;
+  }
+
+  .content-container {
+    padding-left: $content-gutter-mobile;
+    padding-right: $content-gutter-mobile;
+  }
+
+  /* Stack the home card image above the card body */
+  #post-list [class*='col-'] {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  /* Cap the stacked thumbnail height: without this, images render at their
+     natural aspect ratio and tall preview images become huge on phones */
+  #post-list .img-container {
+    aspect-ratio: 40 / 21; // same preview ratio as upstream Chirpy
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      object-fit: cover;
+    }
+  }
+
+  /* Compact sidebar spacing when it sits on top */
+  #sidebar {
+    .profile-wrapper {
+      margin-top: 1rem !important; // beats the desktop margin above
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .site-title {
+      margin-top: 0.25rem;
+      margin-bottom: 0;
+    }
+
+    .site-subtitle {
+      margin-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    /* Hide the contact icons on mobile. `!important` beats `d-flex`. */
+    .sidebar-bottom {
+      display: none !important;
+    }
+
+    ul,
+    ol {
+      padding-left: 1rem;
+      margin: 0;
+      line-height: 1;
+    }
+
+    ul {
+      margin-bottom: 1rem;
+    }
+
+    ul.nav {
+      margin-top: 0.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+
+      li {
+        margin: 0 auto;
+        padding: 0;
+        line-height: 1;
+        min-height: 0;
+        height: auto;
+        font-size: inherit;
+        max-width: 400px;
+        text-align: center;
+      }
+    }
+  }
+
+  /* Keep the tab page title visible (the theme hides h1.dynamic-title
+     below 850px; the h1 selector is needed to match its specificity) */
+  h1.dynamic-title {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip;
+  }
+}
