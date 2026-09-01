@@ -214,6 +214,13 @@ footer p {
     color: #fff !important;
   }
 
+  .site-title,
+  .site-subtitle,
+  .nav-link {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   i,
   svg,
   .fa,
