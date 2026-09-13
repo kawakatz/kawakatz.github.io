@@ -62,6 +62,7 @@ Others links in `.work-entry` paragraphs automatically get hover previews during
 - The MacBook menu follows published posts at build time, just like the notebook
 - The homepage has no separate Recent notes list; the site footer contains only the copyright line
 - Direct article links, Notes, and Search bypass the camera transition
+- On the homepage, touch-capable screens with a short side of 600 CSS pixels or less go directly to Notes before the desk bundle loads. The screen-based check works in either orientation; ordinary desktop window resizing does not trigger it
 - Reduced-motion preferences disable the entrance/navigation animations and pause screen motion; there is no public Pause screens control
 - Local screen animation stops when paused, outside the viewport, in a hidden tab, or after WebGL context loss. The iPad YouTube player runs independently and is not paused by site visibility changes. An otherwise settled scene renders only when an update is needed; the desk clock updates once a second
 - WebGL failure leaves the article links and the complete notebook available

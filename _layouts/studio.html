@@ -3,6 +3,17 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% if page.layout == 'desk' %}
+    <script id="desk-entry">
+      if (matchMedia('(any-pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 600) {
+        location.replace({{ '/notes/' | relative_url | jsonify }});
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          import({{ '/assets/js/dist/desk.js' | relative_url | jsonify }} + '?v={{ site.time | date: "%s" }}');
+        }, { once: true });
+      }
+    </script>
+    {% endif %}
     <meta name="theme-color" content="#edf0f3">
     {% seo %}
     <link rel="icon" href="{{ '/assets/img/favicons/favicon.ico' | relative_url }}" sizes="any">
