@@ -1,0 +1,15 @@
+---
+layout: studio
+---
+<div class="article-shell">
+  <article class="article">
+    <a class="back-link" href="{{ '/notes/' | relative_url }}">← All notes</a>
+    <header class="article-heading"><span class="eyebrow">RESEARCH NOTES</span><h1>{{ page.title }}</h1><p class="article-description">{{ page.description }}</p><div class="article-meta"><span>Masahiro Kawada</span><span>Published <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%b %-d, %Y' }}</time></span>{% if page.last_modified_at %}<span>Updated <time datetime="{{ page.last_modified_at | date_to_xmlschema }}">{{ page.last_modified_at | date: '%b %-d, %Y' }}</time></span>{% endif %}<span class="article-read-time">{{ content | strip_html | number_of_words | divided_by: 250 | plus: 1 }} min read</span></div></header>
+    <div class="prose" id="article-content">{{ content }}</div>
+    <a class="article-end" href="{{ '/notes/' | relative_url }}">← Back to all notes</a>
+  </article>
+  <aside class="toc" aria-label="On this page" hidden><span class="eyebrow">ON THIS PAGE</span><nav id="toc-links"></nav><a class="toc-top" href="#main">Back to top ↑</a></aside>
+</div>
+<dialog class="image-lightbox" aria-label="Enlarged article image">
+  <button class="lightbox-close" type="button" aria-label="Close image" autofocus></button>
+</dialog>

@@ -9,16 +9,14 @@ theme: jekyll-theme-chirpy
 lang: en
 
 # Change to your timezone › https://kevinnovak.github.io/Time-Zone-Picker
-timezone:
+timezone: Asia/Tokyo
 
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
 title: kawakatz.io # the main title
 
-tagline: |
-  Masahiro Kawada
-  🐭 "Anyone can hack"
+tagline: Masahiro Kawada
 
 description: >- # used by seo meta and the atom feed
   kawakatz's notes relating penetration tests and red team engagments
@@ -149,7 +147,7 @@ pwa:
     deny_paths:
       # - "/example"  # URLs match `<SITE_URL>/example/*` will not be cached by the PWA
 
-paginate: 10
+
 
 # The base URL of your site
 baseurl: ""
@@ -197,6 +195,7 @@ defaults:
 
 sass:
   style: compressed
+  sourcemap: development
 
 compress_html:
   clippings: all
@@ -208,6 +207,28 @@ compress_html:
     envs: [development]
 
 exclude:
+  - .asset-tools
+  - .scene-build
+  - concepts
+  - tests
+  - node_modules
+  - assets/js/can.js
+  - assets/js/clock.js
+  - assets/js/computer-screens.js
+  - assets/js/desk.js
+  - assets/js/device-focus.js
+  - assets/js/keyboard.js
+  - assets/js/ipad-video.js
+  - assets/js/mac-desktop.js
+  - assets/js/mac-dock.js
+  - assets/js/mouse-video.js
+  - assets/js/navigation.js
+  - assets/js/room.js
+  - assets/js/screen-view.js
+  - assets/js/screens.js
+  - assets/js/site.js
+  - assets/js/usage-screen.js
+  - assets/js/workstation.js
   - "*.gem"
   - "*.gemspec"
   - docs

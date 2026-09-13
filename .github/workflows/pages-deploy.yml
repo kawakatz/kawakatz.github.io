@@ -45,13 +45,39 @@ jobs:
           ruby-version: 3.3
           bundler-cache: true
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Build 3D assets
+        run: |
+          npm ci
+          npm run assets
+          node --test tests/*.test.js
+
+      - name: Restore Others previews
+        uses: actions/cache@v5
+        with:
+          path: .jekyll-cache/others-previews
+          key: ${{ runner.os }}-others-previews-${{ hashFiles('_plugins/others-previews.rb') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-others-previews-${{ hashFiles('_plugins/others-previews.rb') }}-
+
       - name: Build site
-        run: bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
+        # Render PDF covers and optimize downloaded Open Graph images at build time.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils imagemagick fonts-noto-cjk
+          bundle exec jekyll b -d "_site${{ steps.pages.outputs.base_path }}"
         env:
           JEKYLL_ENV: "production"
 
       - name: Test site
         run: |
+          bundle exec ruby tests/others-previews.rb
+          bundle exec ruby tests/content.rb
           bundle exec htmlproofer _site \
             \-\-disable-external \
             \-\-ignore-urls "/^http:\/\/127.0.0.1/,/^http:\/\/0.0.0.0/,/^http:\/\/localhost/"

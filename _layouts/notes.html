@@ -1,0 +1,15 @@
+---
+layout: studio
+---
+<section class="notes-section notebook" aria-labelledby="notes-title">
+  <a class="back-link" href="{{ '/' | relative_url }}">← Back to the desk</a>
+  <div class="notebook-heading"><div><span class="eyebrow">THE NOTEBOOK</span><h1 id="notes-title">Notes</h1><p>Security research, written down.</p></div><span class="note-count">{{ site.posts | where_exp: 'post', 'post.hidden != true' | size }} notes</span></div>
+  <form class="search-form" role="search" action="{{ '/notes/' | relative_url }}" data-index="{{ '/assets/notes.json' | relative_url }}">
+    <label for="search">Search the notes</label>
+    <div class="search-field"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="search" name="q" type="search" placeholder="Search titles, topics, or a phrase…" autocomplete="off"><button type="submit">Search <span aria-hidden="true">↵</span></button></div>
+  </form>
+  <p id="search-status" role="status" aria-live="polite" hidden></p>
+  {% assign notes = site.posts | where_exp: 'post', 'post.hidden != true' %}
+  {% include note-list.html posts=notes %}
+  <noscript><p>Full-text search needs JavaScript. All published notes are listed above.</p></noscript>
+</section>

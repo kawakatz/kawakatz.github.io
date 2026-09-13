@@ -1,0 +1,10 @@
+<div class="note-list">
+{% for post in include.posts %}
+  <article class="note" data-note data-title="{{ post.title | escape }}" data-url="{{ post.url | relative_url }}" data-description="{{ post.description | escape }}">
+    <a class="note-link" href="{{ post.url | relative_url }}">
+      <div class="note-copy"><div class="note-meta"><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %-d, %Y' }}</time><span>{{ post.content | strip_html | number_of_words | divided_by: 250 | plus: 1 }} min read</span></div><h2>{{ post.title }}</h2><p>{{ post.description | default: post.excerpt | strip_html }}</p><span class="read-note">Read note <span aria-hidden="true">↗</span></span></div>
+      {% if post.image %}{% assign image_path = post.image.path | default: post.image %}<div class="note-image"><img src="{{ image_path | relative_url }}" alt="{{ post.image.alt | default: post.title | escape }}" loading="lazy" width="400" height="230"></div>{% endif %}
+    </a>
+  </article>
+{% endfor %}
+</div>

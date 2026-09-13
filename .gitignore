@@ -1,7 +1,6 @@
 # Bundler cache
 .bundle
 vendor
-Gemfile.lock
 
 # Jekyll cache
 .jekyll-cache
@@ -13,7 +12,6 @@ _site
 
 # NPM dependencies
 node_modules
-package-lock.json
 
 # IDE configurations
 .idea
@@ -27,3 +25,9 @@ _sass/vendors
 assets/js/dist
 
 .DS_Store
+
+# Offline scene authoring
+.asset-tools
+.scene-build
+__pycache__/
+*.py[cod]

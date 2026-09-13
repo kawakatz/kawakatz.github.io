@@ -1,0 +1,26 @@
+---
+layout: studio
+---
+<section class="desk-stage" aria-labelledby="desk-title">
+  <h1 id="desk-title" class="sr-only">kawakatz.io — notes from my desk</h1>
+  <div id="workstation" role="group" aria-label="A close view of the screens on my desk. Drag to look around and use the zoom controls to see screen details. Open Notes on the MacBook, or inspect the Dell monitor, Mouse PC, and iPad.">
+    <p class="scene-status" id="scene-status" role="status">Setting the desk…</p>
+    <iframe id="ipad-video" class="ipad-video" title="TINY TAKEOVER | Official Trailer" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen hidden></iframe>
+  </div>
+  <a class="notes-cue" id="notes-cue" href="{{ '/notes/' | relative_url }}" aria-label="Explore notes — open the MacBook screen" hidden>Explore notes <span aria-hidden="true">↗</span></a>
+  <div class="notes-browser" id="notes-browser" hidden inert aria-hidden="true">
+    <div class="notes-browser-chrome" aria-hidden="true">
+      <div class="chrome-tab-row"><span class="chrome-traffic"><i></i><i></i><i></i></span><span class="chrome-tab"><img src="{{ '/assets/scene/macos-icons/chrome.png' | relative_url }}" alt="">Notes · kawakatz.io<span>×</span></span><span class="chrome-new-tab">＋</span></div>
+      <div class="chrome-toolbar"><span>‹</span><span>›</span><span>⟳</span><span class="chrome-address">kawakatz.io/notes/</span><span>⋮</span></div>
+    </div>
+    <iframe id="notes-preview" src="{{ '/notes/' | relative_url }}" title="Notes page preview" tabindex="-1"></iframe>
+  </div>
+  <div class="device-closeup" id="device-closeup" role="group" aria-label="Screen close-up controls" hidden>
+    <button id="leave-device" type="button">← Back to desk</button>
+    <span id="device-name" role="status"></span>
+    <div class="camera-zoom" role="group" aria-label="Camera zoom"><button type="button" data-camera-zoom="out" aria-label="Zoom out">−</button><output data-camera-zoom-value aria-label="Zoom level">1.0×</output><button type="button" data-camera-zoom="in" aria-label="Zoom in">＋</button></div>
+  </div>
+  <div class="desk-controls"><div class="camera-zoom" role="group" aria-label="Camera zoom"><button type="button" data-camera-zoom="out" aria-label="Zoom out">−</button><output data-camera-zoom-value aria-label="Zoom level">1.0×</output><button type="button" data-camera-zoom="in" aria-label="Zoom in">＋</button></div><span id="scene-hint">Drag to explore · MacBook opens Notes</span><details class="device-picker" id="inspect-screens" hidden><summary>Inspect screens</summary><div class="device-picker-list"><button type="button" data-focus-screen="monitor-screen">Dell U4919DW</button><button type="button" data-focus-screen="mouse-laptop-screen">MouseComputer MB-K690</button><button type="button" data-focus-screen="ipad-screen">iPad Air MUUQ2J/A</button></div></details><button id="reset-view" type="button" hidden aria-label="Reset the current view">Reset view <span aria-hidden="true">↺</span></button></div>
+  <noscript><p class="no-script">The desk uses JavaScript. <a href="{{ '/notes/' | relative_url }}">Read the notes →</a></p></noscript>
+</section>
+<script type="module" src="{{ '/assets/js/dist/desk.js' | relative_url }}?v={{ site.time | date: '%s' }}"></script>
