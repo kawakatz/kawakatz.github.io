@@ -75,7 +75,7 @@ html:has(.image-lightbox[open]){overflow:hidden;scrollbar-gutter:stable}
 .notes-cue{position:absolute;z-index:2;display:flex;align-items:center;gap:9px;min-height:40px;padding:0 14px;transform:translate(-50%,-50%);border:1px solid #ffffff80;border-radius:999px;background:#f8f9f0bf;backdrop-filter:blur(10px);box-shadow:0 2px 14px #19232015;color:#343e43;font-size:11px;font-weight:500;letter-spacing:.02em;white-space:nowrap;transition:transform .32s cubic-bezier(.2,.8,.2,1.3),background .22s,border-color .22s,box-shadow .22s,opacity .2s}
 .notes-cue::before{content:"";position:absolute;inset:-6px;border:1px solid #ffffffb3;border-radius:inherit;pointer-events:none;opacity:0;transform:scale(.94);transition:opacity .22s,transform .32s}
 .notes-cue span{font-size:15px;transition:transform .25s}
-.notes-cue:is(:hover,:focus-visible,.is-hovered){transform:translate(-50%,-50%) scale(1.08);color:#222d33;background:#fafbf3f2;border-color:#fff;box-shadow:0 6px 24px #19232030}
+.notes-cue:is(:hover,:focus-visible,.is-hovered){text-decoration:none;transform:translate(-50%,-50%) scale(1.08);color:#222d33;background:#fafbf3f2;border-color:#fff;box-shadow:0 6px 24px #19232030}
 .notes-cue:is(:hover,:focus-visible,.is-hovered)::before{opacity:1;transform:scale(1)}
 .notes-cue:is(:hover,:focus-visible,.is-hovered) span{transform:translate(3px,-3px)}
 .notes-cue:focus-visible{border-radius:999px}

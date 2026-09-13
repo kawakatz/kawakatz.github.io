@@ -55,7 +55,6 @@ jobs:
         run: |
           npm ci
           npm run assets
-          node --test tests/*.test.js
 
       - name: Restore Others previews
         uses: actions/cache@v5
@@ -76,6 +75,7 @@ jobs:
 
       - name: Test site
         run: |
+          node --test tests/*.test.js
           bundle exec ruby tests/others-previews.rb
           bundle exec ruby tests/content.rb
           bundle exec htmlproofer _site \
