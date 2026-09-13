@@ -11,7 +11,13 @@
 .prose .social-links{display:flex;gap:12px;margin-top:20px}
 .prose .social-links a{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;text-decoration:none;transition:background .2s,transform .2s}
 .prose .social-links a:hover{background:#f0f1ee;transform:translateY(-2px)}
-.prose .social-links img{display:block;flex-shrink:0;width:22px;height:22px;margin:0;border-radius:0;object-fit:contain}
+.prose .social-links img{display:block;flex-shrink:0;width:22px;height:auto;margin:0;border-radius:0;object-fit:contain}
+.prose .social-links img:is([src$="/linkedin.png"],[src$="/github.svg"]){width:24px}
+.prose .social-links img[src$="/udacity.svg"]{width:25px}
+.prose .social-links img[src$="/hackerone.svg"]{width:23px}
+.prose .certification-links{flex-wrap:wrap}
+.prose .certification-links a:not(:first-child) img{width:29px}
+.prose .certification-links a img:is([src$="/crto.png"],[src$="/crtl.png"]){width:30px}
 /* Article typography follows the original site's reading scale. */
 .image-zoom{cursor:zoom-in}.image-zoom:focus-visible{outline:2px solid #7b4f34;outline-offset:5px}.image-zoom.is-zoomed{visibility:hidden}
 html:has(.image-lightbox[open]){overflow:hidden;scrollbar-gutter:stable}
