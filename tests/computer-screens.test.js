@@ -603,6 +603,49 @@ test('decorative tool operations follow gray statuses and reserve a silent tail 
   } finally { screens?.dispose(); recorder.restore(); }
 });
 
+test('an initial Dell resolution skips the intermediate raster without changing drawing or lifetime', t => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2032-12-31T15:00:00Z') });
+  const recorder = recordingCanvases(); let direct, resized;
+  const commands = c => {
+    let index = 0;
+    return c.operations.map(op => {
+      if (op[0] !== 'image') return op;
+      const image = c.blits[index++].image;
+      return ['image', image.name || [image.width, image.height, image.getContext ? commands(image.getContext('2d')) : null], ...op.slice(2)];
+    });
+  };
+  try {
+    const icons = { ...referenceImages(), ...Object.fromEntries(MAC_DOCK_ICON_KEYS.map(name => [name, { name, width: 512, height: 512 }])) };
+    const assets = [{ width: 5120, height: 1440 }, icons, { desktop: { width: 1529, height: 932 } }];
+    direct = createComputerScreens(...assets, 8192);
+    const count = recorder.contexts.length, map = direct.maps.research;
+    assert.deepEqual([map.image.width, map.image.height], [8192, 2304]);
+    resized = createComputerScreens(...assets);
+    assert.equal(recorder.contexts.length, count * 2, 'Direct construction creates only one set of artwork canvases');
+    assert.equal(resized.maps.research.image.width, 5120, 'The default remains unchanged');
+    resized.setResolution('research', 8192);
+    assert.equal(recorder.contexts.length, count * 3, 'The old path needs a second complete raster generation');
+    const equal = () => assert.deepEqual(commands(map.image.getContext('2d')), commands(resized.maps.research.image.getContext('2d')));
+    equal();
+    assert.ok(map.image.getContext('2d').texts.includes('Sat Jan 1 00:00:00'), 'The initial clock uses the same captured date');
+    assert.equal(direct.setMenuProgress(0), false, 'The initial menu remains at rest');
+    assert.deepEqual(direct.dockOrigin, resized.dockOrigin);
+    for (const time of [0, 16, 1000 / 30, realTime(3900)]) {
+      for (const screen of [direct, resized]) reset(screen.maps.research.image.getContext('2d'));
+      assert.equal(direct.update(time), resized.update(time)); equal();
+    }
+    for (const screen of [direct, resized]) { reset(screen.maps.research.image.getContext('2d')); screen.setMenuProgress(.5); }
+    equal();
+    const previousImage = map.image; let disposals = 0;
+    map.addEventListener('dispose', () => disposals++);
+    for (const screen of [direct, resized]) screen.setResolution('research', 12288);
+    assert.equal(direct.maps.research, map); assert.equal(previousImage.width, 0); equal();
+    assert.equal(direct.update(realTime(3900)), false, 'A later resize does not reset playback');
+    direct.dispose(); direct.dispose(); assert.equal(disposals, 2);
+    assert.equal(direct.update(realTime(4000)), false); assert.equal(direct.setResolution('research', 8192), false);
+  } finally { direct?.dispose(); resized?.dispose(); recorder.restore(); }
+});
+
 test('resolution changes preserve research texture identity and phase, and release the old GPU source and pixels', () => {
   const recorder = recordingCanvases();
   try {

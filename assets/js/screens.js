@@ -7,7 +7,7 @@ import { MAC_DOCK_ICON_KEYS } from './mac-dock.js';
 // Carry the build version into image URLs so replaced screenshots cannot reuse an older build's cache.
 const screenAsset = file => new URL(`../../scene/${file}`, import.meta.url).href + new URL(import.meta.url).search;
 
-export async function createScreens() {
+export async function createScreens(initialResearchWidth) {
   const wallpaper = new Image(), macDesktop = new Image(), companion = new Image();
   wallpaper.src = screenAsset('app-reference/dell-desktop.png');
   macDesktop.src = screenAsset('app-reference/mac-desktop.png');
@@ -36,7 +36,7 @@ export async function createScreens() {
     ...Object.values(rdpImages).map(image => image.decode()),
   ]);
   const icons = Object.fromEntries([...entries, ...referenceEntries]);
-  const computers = createComputerScreens(wallpaper, icons, rdpImages);
+  const computers = createComputerScreens(wallpaper, icons, rdpImages, initialResearchWidth?.());
   const mac = createMacDesktop(macDesktop, companion);
   const tablet = document.createElement('canvas');
   tablet.width = 4; tablet.height = 3;

@@ -11,7 +11,7 @@ test('screen coordination preserves native desktops, Notes transitions, paused c
     'edge.png': [1331, 1044], 'ghidra.png': [1542, 1110], 'ghidra-function.png': [634, 378], 'ghidra-variable.png': [476, 242],
     ...Object.fromEntries(['history', 'replay', 'history-menu', 'history-dialog', 'replay-menu', 'replay-dialog'].map(name => [`caido-${name}.png`, [1912, 1242]])),
   };
-  let draws = 0;
+  let draws = 0, decoding;
   const check = (...args) => { for (const value of args) if (typeof value === 'number') assert.ok(Number.isFinite(value), 'Invalid drawing coordinate'); draws++; };
   globalThis.Image = class {
     constructor() { images.push(this); }
@@ -22,7 +22,7 @@ test('screen coordination preserves native desktops, Notes transitions, paused c
       this.naturalWidth = this.width; this.naturalHeight = this.height;
     }
     get src() { return this.url; }
-    async decode() {}
+    async decode() { await decoding; this.decoded = true; }
     removeAttribute(name) { if (name === 'src') this.url = undefined; }
   };
   globalThis.document = {
@@ -148,6 +148,18 @@ test('screen coordination preserves native desktops, Notes transitions, paused c
     const disposedMacVersion = screens.maps.mac.version;
     screens.setMenuProgress(1); assert.equal(screens.maps.mac.version, disposedMacVersion);
     assert.ok(desktopReferences.every(image => image.src === undefined), 'Desktop screenshot references are released on disposal');
+    let releaseDecodes, calls = 0, width = 5120;
+    const imageStart = images.length;
+    decoding = new Promise(resolve => { releaseDecodes = resolve; });
+    const pending = createScreens(() => {
+      calls++; assert.ok(images.slice(imageStart).every(image => image.decoded), 'Initial width is evaluated after every image has decoded');
+      return width;
+    });
+    await Promise.resolve(); assert.equal(calls, 0, 'Decoding does not capture an earlier viewport width');
+    width = 8192; releaseDecodes(); screens = await pending;
+    assert.deepEqual([screens.maps.screen.image.width, screens.maps.screen.image.height], [8192, 2304]);
+    screens.update(1000 / 30); screens.setResolution('screen', 12288); screens.dispose();
+    assert.equal(calls, 1, 'Updates, later resizing and disposal never reevaluate the initial width');
   } finally {
     screens?.dispose();
     for (const key of ['document', 'Image']) { if (previous[key] === undefined) delete globalThis[key]; else globalThis[key] = previous[key]; }

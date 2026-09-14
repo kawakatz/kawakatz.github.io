@@ -9,6 +9,7 @@ import { createCanTexture } from './can.js';
 import { createClockTexture, drawClock } from './clock.js';
 import { displayFrame, displayPose, displayPixelWidth, displayZoomMinimum, displayPixelRatio, displayTextureWidth } from './device-focus.js';
 import { createIPadVideo, videoViewport } from './ipad-video.js';
+import { createRoomRenderer } from './room-renderer.js';
 
 const host = document.querySelector('#workstation');
 const status = document.querySelector('#scene-status');
@@ -30,7 +31,7 @@ const zoomValues = [...document.querySelectorAll('[data-camera-zoom-value]')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
 try {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, stencil: true, powerPreference: 'low-power' });
   // Embedded previews can report DPR 1 even on Retina displays. Start at 2x;
   // the default composition gains extra samples once its viewport is known.
   renderer.setPixelRatio(2);
@@ -63,7 +64,22 @@ try {
   }
   let reflections = createReflections();
   scene.environment = reflections.texture; scene.environmentIntensity = .65;
-  const screens = await createScreens();
+  const deviceMeshes = {};
+  model.traverse(object => { if (object.isMesh && deviceLabels[object.userData.dynamic]) deviceMeshes[object.userData.dynamic] = object; });
+  const deviceFrames = Object.fromEntries(Object.entries(deviceMeshes).map(([name, mesh]) => [name, displayFrame(mesh)]));
+  const nativeWidths = { screen: 5120, mac: 3840, youtube: 2048 };
+  const screens = await createScreens(() => {
+    // Choose the first raster after image decoding, using the same view and
+    // resize threshold as sharpenVisibleScreens, before allocating its artwork.
+    const { width, height } = host.getBoundingClientRect();
+    if (!(width > 0 && height > 0)) return nativeWidths.screen;
+    const view = new THREE.PerspectiveCamera(lensFov(screenViewFov(width / height), 1), width / height, screenView.near, 30);
+    const pose = screenViewPose();
+    view.position.copy(pose.position); view.quaternion.copy(pose.rotation); view.updateMatrixWorld(true);
+    const minimum = Math.min(width, height) >= 600 ? 8192 : nativeWidths.screen;
+    const requested = displayTextureWidth(displayPixelWidth(deviceFrames['monitor-screen'], view, width, height) * displayPixelRatio(width, height), 32 / 9, minimum, renderer.capabilities.maxTextureSize);
+    return requested > nativeWidths.screen || requested < nativeWidths.screen * .65 ? requested : nativeWidths.screen;
+  });
   mouseDecals.colorSpace = THREE.SRGBColorSpace;
   const maps = { ...screens.maps, clock: createClockTexture(), can: createCanTexture(), mouseDecals, ...createKeyboardTextures() };
   for (const map of Object.values(maps)) { map.flipY = false; map.anisotropy = renderer.capabilities.getMaxAnisotropy(); }
@@ -78,7 +94,7 @@ try {
   weave.channel = 1; weave.magFilter = THREE.LinearFilter; weave.minFilter = THREE.LinearMipmapLinearFilter;
   weave.anisotropy = renderer.capabilities.getMaxAnisotropy();
   weave.generateMipmaps = true; weave.needsUpdate = true;
-  const deviceMeshes = {};
+  const changingMeshes = [];
   model.traverse(object => {
     if (object.userData.label?.startsWith('Dell U4919DW')) object.userData.label = 'Dell U4919DW · inspect screen';
     if (object.userData.label?.startsWith('MacBook')) object.userData.label = 'MacBook · open Notes';
@@ -95,9 +111,9 @@ try {
       // Keep the display in front of its cover glass at every view distance.
       else object.material = new THREE.MeshBasicMaterial({ map, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
       if (name === 'mouse-laptop-screen') screens.configureMouseMaterial(object.material);
+      if (['monitor-screen', 'macbook-screen', 'mouse-laptop-screen', 'clock-screen'].includes(name)) changingMeshes.push(object);
       if (deviceLabels[name]) {
         object.userData.action = name === 'macbook-screen' ? 'notes' : name;
-        deviceMeshes[name] = object;
       }
     } else {
       const original = object.material;
@@ -140,12 +156,11 @@ try {
     }
   });
   scene.add(model);
-  const deviceFrames = Object.fromEntries(Object.entries(deviceMeshes).map(([name, mesh]) => [name, displayFrame(mesh)]));
   const surfaceNames = { 'monitor-screen': 'screen', 'mouse-laptop-screen': 'windows', 'macbook-screen': 'mac', 'ipad-screen': 'youtube' };
-  const nativeWidths = { screen: 5120, mac: 3840, youtube: 2048 };
   // Cycles has already integrated static lighting into the texture atlas.
   scene.add(new THREE.HemisphereLight('#dce9ff', '#94785b', 1.8));
   const labelLight = new THREE.DirectionalLight('#ffe0c5', 3.0); labelLight.position.set(-2, 3, 2); scene.add(labelLight);
+  const roomRenderer = createRoomRenderer(renderer, scene, changingMeshes);
   const camera = new THREE.PerspectiveCamera(screenView.fov, 1, screenView.near, 30);
   const target = new THREE.Vector3(...screenView.target);
   const fit = camera.clone();
@@ -228,7 +243,8 @@ try {
   function positionNotesCue() {
     if (focused || transition) return;
     const [anchor] = projectedScreen('macbook-screen', {x:.5,y:.5,w:0,h:0});
-    notesCue.hidden = !contextAvailable || anchor.x < 96 || anchor.x > viewportWidth - 96 || anchor.y < 72 || anchor.y > viewportHeight - 60;
+    const hidden = !contextAvailable || anchor.x < 96 || anchor.x > viewportWidth - 96 || anchor.y < 72 || anchor.y > viewportHeight - 60;
+    if (notesCue.hidden !== hidden) notesCue.hidden = hidden;
     notesCue.style.left = `${anchor.x}px`;
     notesCue.style.top = `${anchor.y}px`;
   }
@@ -256,7 +272,8 @@ try {
         return raycaster.intersectObject(model,true).length > 0;
       }));
     }
-    ipadVideo.hidden = !eligible || videoOccluded;
+    const hidden = !eligible || videoOccluded;
+    if (ipadVideo.hidden !== hidden) ipadVideo.hidden = hidden;
     if (!ipadVideo.hidden) {
       ipadVideo.style.width = `${size.width}px`; ipadVideo.style.height = `${size.height}px`;
       ipadVideo.style.transform = `matrix3d(${quadTransform(corners,size.width,size.height).join(',')})`;
@@ -369,7 +386,7 @@ try {
     if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
     if (!active && !dragging) sharpenVisibleScreens();
     updateZoomControls();
-    renderer.render(scene, camera);
+    roomRenderer.render(camera);
     positionIPadVideo();
     positionNotesCue();
     if (!notesBrowser.hidden) positionNotes();
@@ -549,14 +566,14 @@ try {
       contextAvailable = true; status.hidden = true; syncPlayback(); requestRender();
     } catch (error) { console.warn('Desk reflections could not restore:', error); }
   });
-  window.addEventListener('pagehide', event => { pageActive = false; lastFrameTime = 0; syncPlayback(); if (!event.persisted) { tabletVideo.dispose(); clearInterval(clockTimer); clearInterval(screenTimer); cancelAnimationFrame(frame); screens.dispose(); maps.clock.dispose(); mouseDecals.dispose(); renderer.dispose(); daylight.dispose(); occlusion.dispose(); roomDaylight.dispose(); roomDaylight.image.close(); roomOcclusion.dispose(); reflections.dispose(); weave.dispose(); } });
+  window.addEventListener('pagehide', event => { pageActive = false; lastFrameTime = 0; syncPlayback(); if (!event.persisted) { tabletVideo.dispose(); clearInterval(clockTimer); clearInterval(screenTimer); cancelAnimationFrame(frame); screens.dispose(); maps.clock.dispose(); mouseDecals.dispose(); roomRenderer.dispose(); renderer.dispose(); daylight.dispose(); occlusion.dispose(); roomDaylight.dispose(); roomDaylight.image.close(); roomOcclusion.dispose(); reflections.dispose(); weave.dispose(); } });
   resize();
   syncPlayback();
   const initial = overviewPose();
   camera.position.copy(initial.position); camera.quaternion.copy(initial.rotation); camera.fov = initial.fov; camera.near = initial.near; camera.updateProjectionMatrix();
   renderer.setPixelRatio(displayPixelRatio(viewportWidth, viewportHeight));
   sharpenVisibleScreens();
-  renderer.render(scene, camera);
+  roomRenderer.render(camera);
   positionIPadVideo();
   positionNotesCue();
   host.classList.add('is-ready');

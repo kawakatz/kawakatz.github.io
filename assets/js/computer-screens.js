@@ -857,7 +857,7 @@ function renderResearch(c,t,assets,restore){
   return {changed:true};
 }
 
-export function createComputerScreens(coast=null,icons={},rdpImages={}){
+export function createComputerScreens(coast=null,icons={},rdpImages={},initialWidth=5120){
   const maps={},rect=getMacDockItemRect('minimized-chrome',researchDock);
   const dockOrigin=Object.freeze({x:rect.x/desktopWidth,y:rect.y/desktopHeight,w:rect.w/desktopWidth,h:rect.h/desktopHeight});
   let state,previousBucket=0,disposed=false,date=new Date(),menuProgress=0;
@@ -887,7 +887,7 @@ export function createComputerScreens(coast=null,icons={},rdpImages={}){
     if(!old)map.anisotropy=4;
     map.needsUpdate=true;maps.research=map;state={base,c,assets,restore,map};return true;
   }
-  setResolution('research',5120);
+  if(!setResolution('research',initialWidth))setResolution('research',5120);
   return {maps,setResolution,dockOrigin,setMenuProgress(value){
     if(disposed||!Number.isFinite(value))return false;
     value=Math.max(0,Math.min(1,value));if(value===menuProgress)return false;
