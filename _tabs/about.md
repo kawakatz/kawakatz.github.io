@@ -3,6 +3,11 @@ layout: page
 title: About
 eyebrow: BEHIND THE NOTES
 description: Masahiro Kawada / kawakatz
+image:
+  path: /assets/img/social/wordmark.png
+  width: 1200
+  height: 630
+  alt: kawakatz.io
 permalink: /about/
 order: 3
 ---

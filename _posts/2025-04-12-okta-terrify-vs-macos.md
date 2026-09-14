@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Okta Terrify vs macOS
-description: The macOS security mechanisms against Oktat Terrify and how to abuse Okta Verify
+description: The macOS security mechanisms against Okta Terrify and how to abuse Okta Verify
 
 date: 2025-04-12 01:30:00 +0900
 image:

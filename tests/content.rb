@@ -15,6 +15,18 @@ raise 'Notes preview must load the real notebook page' unless preview&.[]('src')
 browser = home.at_css('#notes-browser')
 raise 'Notes preview must start hidden and inert' unless browser&.attribute('hidden') && browser.attribute('inert') && browser['aria-hidden'] == 'true'
 notebook = Nokogiri::HTML(site.join('notes/index.html').read)
+raise 'Notes sharing description must match its visible introduction' unless notebook.at_css('meta[property="og:description"]')['content'] == notebook.at_css('.notebook-heading p').text
+%w[notes others about].each do |slug|
+  page = Nokogiri::HTML(site.join(slug, 'index.html').read)
+  raise "Static page classified as an article: #{slug}" unless page.at_css('meta[property="og:type"]')['content'] == 'website'
+  raise "Static page has an invented publication date: #{slug}" unless page.css('meta[property="article:published_time"], meta[property="article:modified_time"]').empty?
+  metadata = JSON.parse(page.at_css('script[type="application/ld+json"]').text)
+  raise "Static page schema is not WebPage: #{slug}" unless metadata['@type'] == 'WebPage' && !metadata.key?('datePublished') && !metadata.key?('dateModified')
+end
+[home, notebook, *%w[others about].map { |slug| Nokogiri::HTML(site.join(slug, 'index.html').read) }].zip(['Masahiro Kawada', 'Notes', 'Others', 'About']).each do |page, title|
+  raise "Sharing title repeats the site name: #{title}" unless page.at_css('meta[property="og:site_name"]')['content'] == 'kawakatz.io' && page.at_css('meta[property="og:title"]')['content'] == title
+  raise "Missing shared wordmark: #{title}" unless page.at_css('meta[property="og:image"]')&.[]('content') == 'https://kawakatz.io/assets/img/social/wordmark.png' && site.join('assets/img/social/wordmark.png').file?
+end
 raise 'Notebook footer must contain only the copyright' unless notebook.at_css('.site-footer')&.text&.strip&.match?(/\A© \d{4} kawakatz\z/) && notebook.css('.site-footer a').empty?
 notebook_links = notebook.css('.note-list .note-link').map { |a| a['href'] }
 raise 'Notebook does not follow published posts' unless notebook_links.sort == notes.map { |n| n.fetch('url') }.sort
@@ -29,6 +41,7 @@ notes.each do |note|
   raise "Missing content: #{note['url']}" unless page.at_css('#article-content')&.text&.length.to_i > 100
   raise "3D loaded in article: #{note['url']}" if page.css('script[src]').any? { |s| s['src'].end_with?('/desk.js') }
   raise "Missing dates: #{note['url']}" if page.css('.article-meta time[datetime]').empty?
+  raise "Article publication metadata missing: #{note['url']}" unless page.at_css('meta[property="og:type"]')['content'] == 'article' && page.at_css('meta[property="article:published_time"]')
   raise "Missing search content: #{note['url']}" if note.fetch('body').length < 100
 end
 raise 'Original Others route missing' unless site.join('others/index.html').file?

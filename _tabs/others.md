@@ -3,6 +3,11 @@ layout: page
 title: Others
 eyebrow: BEYOND THE NOTEBOOK
 description: Talks, slides, and other work.
+image:
+  path: /assets/img/social/wordmark.png
+  width: 1200
+  height: 630
+  alt: kawakatz.io
 permalink: /others/
 order: 2
 ---

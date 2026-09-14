@@ -16,7 +16,7 @@
 .prose .social-links img[src$="/udacity.svg"]{width:25px}
 .prose .social-links img[src$="/x.svg"]{width:21px}
 .prose .social-links img[src$="/hackerone.svg"]{width:23px}
-.prose .certification-links{flex-wrap:wrap}
+.prose .certification-links{flex-wrap:wrap;row-gap:20px}
 .prose .certification-links a:not(:first-child) img{width:29px}
 .prose .certification-links a img:is([src$="/crto.png"],[src$="/crtl.png"]){width:30px}
 /* Article typography follows the original site's reading scale. */
