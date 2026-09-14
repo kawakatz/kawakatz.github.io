@@ -39,6 +39,10 @@ notes.each do |note|
   page = Nokogiri::HTML(site.join(note.fetch('url').delete_prefix('/'), 'index.html').read)
   raise "Missing title: #{note['url']}" unless page.at_css('h1')&.text == note.fetch('title')
   raise "Missing content: #{note['url']}" unless page.at_css('#article-content')&.text&.length.to_i > 100
+  page.css('#article-content img').each do |image|
+    raise "Article image must use a figure and preserve its explicit width: #{image['src']}" unless image.parent.name == 'figure' && image['width'].to_i.positive?
+  end
+  raise "Image captions must belong to a figure: #{note['url']}" unless page.css('#article-content figcaption').all? { |caption| caption.parent.name == 'figure' }
   raise "3D loaded in article: #{note['url']}" if page.css('script[src]').any? { |s| s['src'].end_with?('/desk.js') }
   raise "Missing dates: #{note['url']}" if page.css('.article-meta time[datetime]').empty?
   raise "Article publication metadata missing: #{note['url']}" unless page.at_css('meta[property="og:type"]')['content'] == 'article' && page.at_css('meta[property="article:published_time"]')

