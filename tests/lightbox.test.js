@@ -57,7 +57,7 @@ test('article lightbox zooms from the image and closes safely across keyboard, m
     querySelector: selector => selector === '.image-lightbox' ? dialog : null,
     querySelectorAll(selector) {
       if (selector === '.work-entry a[data-preview]') return [];
-      assert.equal(selector, '#article-content img'); return [first, second, linked];
+      assert.equal(selector, '#article-content img'); return [linked, first, second];
     }
   } });
   await import('../assets/js/site.js');

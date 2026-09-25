@@ -6,7 +6,7 @@
     "assets": "esbuild assets/js/desk.js assets/js/site.js --bundle --minify --format=esm --target=es2022 --outdir=assets/js/dist",
     "build": "npm run assets && JEKYLL_ENV=production bundle exec jekyll build",
     "dev": "npm run assets && bundle exec jekyll serve --host 127.0.0.1 --port 4173 --livereload",
-    "test": "npm run build && node --test tests/*.test.js && bundle exec ruby tests/others-previews.rb && bundle exec ruby tests/content.rb && bundle exec htmlproofer _site --disable-external",
+    "test": "npm run build && node --test tests/*.test.js && bundle exec ruby tests/others-previews.rb && bundle exec ruby tests/link-icons.rb && bundle exec ruby tests/content.rb && bundle exec htmlproofer _site --disable-external",
     "preview": "python3 -m http.server 4173 --bind 127.0.0.1 --directory _site",
     "scene": "node tools/export-scene.mjs && .asset-tools/bin/python tools/bake-scene.py"
   },

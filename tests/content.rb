@@ -39,7 +39,7 @@ notes.each do |note|
   page = Nokogiri::HTML(site.join(note.fetch('url').delete_prefix('/'), 'index.html').read)
   raise "Missing title: #{note['url']}" unless page.at_css('h1')&.text == note.fetch('title')
   raise "Missing content: #{note['url']}" unless page.at_css('#article-content')&.text&.length.to_i > 100
-  page.css('#article-content img').each do |image|
+  page.css('#article-content img:not(.link-icon)').each do |image|
     raise "Article image must use a figure and preserve its explicit width: #{image['src']}" unless image.parent.name == 'figure' && image['width'].to_i.positive?
   end
   raise "Image captions must belong to a figure: #{note['url']}" unless page.css('#article-content figcaption').all? { |caption| caption.parent.name == 'figure' }
@@ -47,6 +47,13 @@ notes.each do |note|
   raise "Missing dates: #{note['url']}" if page.css('.article-meta time[datetime]').empty?
   raise "Article publication metadata missing: #{note['url']}" unless page.at_css('meta[property="og:type"]')['content'] == 'article' && page.at_css('meta[property="article:published_time"]')
   raise "Missing search content: #{note['url']}" if note.fetch('body').length < 100
+end
+Dir.glob(site.join('**/*.html')).each do |path|
+  Nokogiri::HTML(File.read(path)).css('img.link-icon').each do |icon|
+    src = icon['src'].to_s
+    raise "Link icon must be published locally: #{src}" unless src.start_with?('/assets/icons/') && site.join(src.delete_prefix('/')).file?
+    raise "Link icon must remain decorative: #{src}" unless icon['alt'] == '' && icon.parent.name != 'figure'
+  end
 end
 raise 'Original Others route missing' unless site.join('others/index.html').file?
 raise 'RSS missing' unless site.join('feed.xml').file?

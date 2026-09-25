@@ -179,8 +179,8 @@ if (lightbox) {
     await zoom?.finished.catch(() => {});
     lightbox.close();
   };
-  for (const [index, image] of [...document.querySelectorAll('#article-content img')].entries()) {
-    if (image.closest('a, button')) continue;
+  const articleImages = [...document.querySelectorAll('#article-content img')].filter(image => !image.closest('a, button'));
+  for (const [index, image] of articleImages.entries()) {
     const label = image.alt.trim() || `Image ${index + 1}`;
     image.tabIndex = 0;
     image.setAttribute('role', 'button');

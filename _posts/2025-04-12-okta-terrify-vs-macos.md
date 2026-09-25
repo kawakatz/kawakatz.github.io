@@ -144,7 +144,7 @@ After applying the patch, everything works as expected.
 
 
 The final script is here.  
-**Link**: [https://github.com/kawakatz/scripts-for-okta-verify](https://github.com/kawakatz/scripts-for-okta-verify)
+Link: [https://github.com/kawakatz/scripts-for-okta-verify](https://github.com/kawakatz/scripts-for-okta-verify)
 
 ## Debugging Okta Verify
 To debug Okta Verify, we first need to disable SIP at first. Then, attach lldb with sudo:  
@@ -247,17 +247,17 @@ Depending on the configuration and circumstances at the time, it can be possible
 #### Side Note
 Before publication, I realized that the method described here had already been published in the article linked below (I guess I really had a silly moment!🤦‍♂️). Since the exact same results can be reproduced using the script provided in their repositories, I recommend referring to that repositories.
 - by [Adam Chester](https://x.com/_xpn_)  
-**Blog**: [Identity Providers for RedTeamers](https://blog.xpnsec.com/identity-providers-redteamers/) | **Tool**: OktaRealFast of [OktaPostExToolkit](https://github.com/xpn/OktaPostExToolkit)    
+Blog: [Identity Providers for RedTeamers](https://blog.xpnsec.com/identity-providers-redteamers/) | Tool: OktaRealFast of [OktaPostExToolkit](https://github.com/xpn/OktaPostExToolkit)    
 - by the GitLab Red Team  
-**Blog**: [Tech Note - Okta Verify Bypass](https://gitlab-com.gitlab.io/gl-security/security-tech-notes/red-team-tech-notes/okta-verify-bypass-sept-2024/) | **Tool**: [8769_forwarder](https://gitlab.com/gitlab-com/gl-security/security-operations/redteam/redteam-public/pocs/8769_forwarder)
+Blog: [Tech Note - Okta Verify Bypass](https://gitlab-com.gitlab.io/gl-security/security-tech-notes/red-team-tech-notes/okta-verify-bypass-sept-2024/) | Tool: [8769_forwarder](https://gitlab.com/gitlab-com/gl-security/security-operations/redteam/redteam-public/pocs/8769_forwarder)
 
 ## Trusted App Filters
 Trusted App Filters is mentioned as below in the article.  
-**Link**: [Trusted app filters](https://help.okta.com/oie/en-us/content/topics/identity-engine/authenticators/trusted-app-filters-for-fastpass.htm)
+Link: [Trusted app filters](https://help.okta.com/oie/en-us/content/topics/identity-engine/authenticators/trusted-app-filters-for-fastpass.htm)
 > Specifically, trusted app filters enable the blocking of unsigned binaries and creating an allowlist of binaries. By preventing unsigned binaries from invoking Okta FastPass, you enhance security against unauthorized or malicious software.
 
 By using Trusted App Filters, you can restrict the applications that are permitted to request signatures on Okta Verify, thereby serving as a countermeasure against the attack method. In the following article, a general explanation of how Trusted App Filters operate is provided while mentioning the attack method. You can find the explanation specifically in the "How it works" section.  
-**Link**: [Stay secure with FastPass and Trusted App Filters](https://www.okta.com/blog/2025/04/stay-secure-with-fastpass-and-trusted-app-filters/)
+Link: [Stay secure with FastPass and Trusted App Filters](https://www.okta.com/blog/2025/04/stay-secure-with-fastpass-and-trusted-app-filters/)
 
 I haven't yet been able to test Trusted App Filters, so I plan to investigate how it works and whether it can be bypassed in the future.
 
