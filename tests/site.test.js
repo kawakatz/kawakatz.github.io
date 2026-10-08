@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { readFile, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createWorkstation, fitCamera, monitorView, monitorScreen, overview } from '../assets/js/workstation.js';
 import { keyLayout } from '../assets/js/keyboard.js';
 import { screenView, screenViewPose, screenViewFov, lensFov } from '../assets/js/screen-view.js';
@@ -284,6 +285,19 @@ test('the camera transition is continuous, monotone and stops at its destination
 });
 
 
+test('the published scene is packed losslessly for the browser decoder', async () => {
+  const file = await readFile(new URL('../assets/scene/workstation.glb', import.meta.url));
+  const json = JSON.parse(file.subarray(20, 20 + file.readUInt32LE(12)));
+  assert.ok(json.extensionsRequired.includes('KHR_meshopt_compression'));
+  for (const view of json.bufferViews) {
+    const packed = view.extensions?.KHR_meshopt_compression;
+    assert.ok(packed, 'Every geometry buffer is meshopt-packed');
+    // No quantizing filter, and INDICES rather than TRIANGLES so no triangle corner is rotated.
+    assert.ok(['ATTRIBUTES', 'INDICES'].includes(packed.mode) && (packed.filter ?? 'NONE') === 'NONE', 'Packing must decode to the exported bytes');
+  }
+  assert.ok(json.accessors.every(accessor => !accessor.normalized && (accessor.type === 'SCALAR' || accessor.componentType === 5126)), 'Vertex attributes keep their exported float precision');
+});
+
 test('the published baked scene matches its source and has usable live surfaces', async () => {
   const root = new URL('../', import.meta.url);
   const source = await readFile(new URL('assets/js/workstation.js', root));
@@ -293,7 +307,7 @@ test('the published baked scene matches its source and has usable live surfaces'
   assert.equal(createHash('sha256').update(source).update(keyboardSource).update(roomSource).digest('hex'), hash, 'Rebake the scene after changing its model source');
   for (const file of ['desk-daylight.jpg', 'desk-occlusion.jpg', 'room-daylight.webp', 'room-occlusion.jpg']) assert.ok((await stat(new URL(`assets/scene/${file}`, root))).size > 1000);
   const file = await readFile(new URL('assets/scene/workstation.glb', root));
-  const { scene } = await new GLTFLoader().parseAsync(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength), '');
+  const { scene } = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength), '');
   for (const name of ['monitor-screen', 'macbook-screen', 'mouse-laptop-screen', 'ipad-screen', 'clock-screen', 'can-body', 'macbook-key-legends', 'mouse-laptop-key-legends', 'mouse-palmrest-decals']) {
     assert.equal(scene.getObjectByName(name)?.userData.dynamic, name, `Missing live surface ${name}`);
   }

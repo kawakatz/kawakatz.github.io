@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createScreens } from '../assets/js/screens.js?v=test-build';
+import { createScreens, loadScreens } from '../assets/js/screens.js?v=test-build';
 
 test('screen coordination preserves native desktops, Notes transitions, paused clocks and texture lifetimes', async () => {
   const previous = { document: globalThis.document, Image: globalThis.Image };
   const contexts = [], images = [], sizes = {
-    'mac-desktop.png': [3600, 2338], 'dell-desktop.png': [5120, 1440],
-    'rdp-desktop.webp': [1529, 932], 'rdp-calculator.png': [322, 533],
-    'codex-empty.png': [1455, 1427], 'codex-working.png': [1379, 1381], 'codex-completed.png': [899, 526],
+    'mac-desktop.webp': [3600, 2338], 'dell-desktop.webp': [5120, 1440],
+    'rdp-desktop.webp': [1529, 932], 'rdp-calculator.webp': [322, 533],
+    'codex-empty.png': [1455, 1427], 'codex-working.webp': [1379, 1381], 'codex-completed.webp': [899, 526],
     'edge.png': [1331, 1044], 'ghidra.png': [1542, 1110], 'ghidra-function.png': [634, 378], 'ghidra-variable.png': [476, 242],
     ...Object.fromEntries(['history', 'replay', 'history-menu', 'history-dialog', 'replay-menu', 'replay-dialog'].map(name => [`caido-${name}.png`, [1912, 1242]])),
   };
@@ -18,7 +18,7 @@ test('screen coordination preserves native desktops, Notes transitions, paused c
     set src(value) {
       this.url = value;
       const filename = new URL(value).pathname.split('/').at(-1), reference = value.includes('/app-reference/');
-      [this.width, this.height] = reference || filename.endsWith('.webp') || filename === 'rdp-calculator.png' ? sizes[filename] || [512, 512] : [512, 512];
+      [this.width, this.height] = reference || filename.endsWith('.webp') ? sizes[filename] || [512, 512] : [512, 512];
       this.naturalWidth = this.width; this.naturalHeight = this.height;
     }
     get src() { return this.url; }
@@ -80,7 +80,7 @@ test('screen coordination preserves native desktops, Notes transitions, paused c
     const research = screens.maps.screen.image;
     assert.deepEqual([research.width, research.height], [5120, 1440], 'Research desktop is composited without stretching');
     assert.ok(images.every(image => new URL(image.src).search === '?v=test-build'), 'Every screen image inherits the build version instead of reusing an older screenshot URL');
-    const desktopReferences = ['mac-desktop.png', 'dell-desktop.png'].map(filename => images.find(image => new URL(image.src).pathname.endsWith(`/app-reference/${filename}`)));
+    const desktopReferences = ['mac-desktop.webp', 'dell-desktop.webp'].map(filename => images.find(image => new URL(image.src).pathname.endsWith(`/app-reference/${filename}`)));
     for (const image of desktopReferences) {
       assert.ok(image && contexts.some(ctx => ctx.blits.some(blit => blit.image === image)), 'Both supplied desktop screenshots are loaded and drawn at their own native dimensions');
     }
@@ -160,6 +160,11 @@ test('screen coordination preserves native desktops, Notes transitions, paused c
     assert.deepEqual([screens.maps.screen.image.width, screens.maps.screen.image.height], [8192, 2304]);
     screens.update(1000 / 30); screens.setResolution('screen', 12288); screens.dispose();
     assert.equal(calls, 1, 'Updates, later resizing and disposal never reevaluate the initial width');
+    const loading = loadScreens(), requested = images.length;
+    screens = await createScreens(() => 5120, loading);
+    assert.equal(images.length, requested, 'Drawing an earlier download requests no images of its own');
+    assert.ok(images.slice(imageStart).every(image => image.decoded));
+    screens.dispose();
   } finally {
     screens?.dispose();
     for (const key of ['document', 'Image']) { if (previous[key] === undefined) delete globalThis[key]; else globalThis[key] = previous[key]; }

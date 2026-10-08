@@ -1,15 +1,32 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { screenView, screenViewPose, screenViewFov, lensFov, inspectedScreenPose } from './screen-view.js';
 import { createKeyboardTextures } from './keyboard.js';
 import { ease, notesFlight, quadTransform } from './navigation.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { createScreens } from './screens.js';
+import { createScreens, loadScreens } from './screens.js';
 import { createCanTexture } from './can.js';
 import { createClockTexture, drawClock } from './clock.js';
 import { displayFrame, displayPose, displayPixelWidth, displayZoomMinimum, displayPixelRatio, displayTextureWidth } from './device-focus.js';
 import { createIPadVideo, videoViewport } from './ipad-video.js';
 import { createRoomRenderer } from './room-renderer.js';
+
+// Request every asset while the page is still parsing; the desk is assembled once the document is ready.
+const assets = new URL('../../scene/', import.meta.url);
+const loader = new THREE.TextureLoader();
+const sceneAssets = Promise.all([
+  new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(new URL('workstation.glb', assets).href),
+  loader.loadAsync(new URL('desk-daylight.jpg', assets).href),
+  loader.loadAsync(new URL('desk-occlusion.jpg', assets).href),
+  new THREE.ImageBitmapLoader().loadAsync(new URL('room-daylight.webp', assets).href).then(image => { const map = new THREE.Texture(image); map.needsUpdate = true; return map; }),
+  loader.loadAsync(new URL('room-occlusion.jpg', assets).href),
+  loader.loadAsync(new URL('mouse-palmrest-decals.svg', assets).href),
+]);
+const screenAssets = loadScreens();
+// A failed download is reported below, once the status text exists.
+sceneAssets.catch(() => {}); screenAssets.catch(() => {});
+if (document.readyState === 'loading') await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
 
 const host = document.querySelector('#workstation');
 const status = document.querySelector('#scene-status');
@@ -41,16 +58,7 @@ try {
   host.append(renderer.domElement);
   renderer.domElement.setAttribute('aria-hidden', 'true');
   const scene = new THREE.Scene();
-  const assets = new URL('../../scene/', import.meta.url);
-  const loader = new THREE.TextureLoader();
-  const [{ scene: model }, daylight, occlusion, roomDaylight, roomOcclusion, mouseDecals] = await Promise.all([
-    new GLTFLoader().loadAsync(new URL('workstation.glb', assets).href),
-    loader.loadAsync(new URL('desk-daylight.jpg', assets).href),
-    loader.loadAsync(new URL('desk-occlusion.jpg', assets).href),
-    new THREE.ImageBitmapLoader().loadAsync(new URL('room-daylight.webp', assets).href).then(image => { const map = new THREE.Texture(image); map.needsUpdate = true; return map; }),
-    loader.loadAsync(new URL('room-occlusion.jpg', assets).href),
-    loader.loadAsync(new URL('mouse-palmrest-decals.svg', assets).href),
-  ]);
+  const [{ scene: model }, daylight, occlusion, roomDaylight, roomOcclusion, mouseDecals] = await sceneAssets;
   for (const map of [daylight, occlusion, roomDaylight, roomOcclusion]) {
     map.colorSpace = THREE.SRGBColorSpace; map.flipY = false;
     map.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -68,20 +76,10 @@ try {
   model.traverse(object => { if (object.isMesh && deviceLabels[object.userData.dynamic]) deviceMeshes[object.userData.dynamic] = object; });
   const deviceFrames = Object.fromEntries(Object.entries(deviceMeshes).map(([name, mesh]) => [name, displayFrame(mesh)]));
   const nativeWidths = { screen: 5120, mac: 3840, youtube: 2048 };
-  const screens = await createScreens(() => {
-    // Choose the first raster after image decoding, using the same view and
-    // resize threshold as sharpenVisibleScreens, before allocating its artwork.
-    const { width, height } = host.getBoundingClientRect();
-    if (!(width > 0 && height > 0)) return nativeWidths.screen;
-    const view = new THREE.PerspectiveCamera(lensFov(screenViewFov(width / height), 1), width / height, screenView.near, 30);
-    const pose = screenViewPose();
-    view.position.copy(pose.position); view.quaternion.copy(pose.rotation); view.updateMatrixWorld(true);
-    const minimum = Math.min(width, height) >= 600 ? 8192 : nativeWidths.screen;
-    const requested = displayTextureWidth(displayPixelWidth(deviceFrames['monitor-screen'], view, width, height) * displayPixelRatio(width, height), 32 / 9, minimum, renderer.capabilities.maxTextureSize);
-    return requested > nativeWidths.screen || requested < nativeWidths.screen * .65 ? requested : nativeWidths.screen;
-  });
+  const surfaceNames = { 'monitor-screen': 'screen', 'mouse-laptop-screen': 'windows', 'macbook-screen': 'mac', 'ipad-screen': 'youtube' };
   mouseDecals.colorSpace = THREE.SRGBColorSpace;
-  const maps = { ...screens.maps, clock: createClockTexture(), can: createCanTexture(), mouseDecals, ...createKeyboardTextures() };
+  // Screen artwork joins these maps once its images have decoded.
+  const maps = { clock: createClockTexture(), can: createCanTexture(), mouseDecals, ...createKeyboardTextures() };
   for (const map of Object.values(maps)) { map.flipY = false; map.anisotropy = renderer.capabilities.getMaxAnisotropy(); }
   // Cutout holes use the original cloth coordinates, independent of the lighting atlas.
   const weavePixels = new Uint8Array(32 * 32 * 4);
@@ -102,15 +100,15 @@ try {
     const name = object.userData.dynamic;
     if (name) {
       const ink = name.endsWith('-key-legends');
-      const map = ink ? maps[name.replace('-key-legends', '')] : name === 'mouse-palmrest-decals' ? maps.mouseDecals : name === 'monitor-screen' ? maps.screen : name === 'clock-screen' ? maps.clock : name === 'can-body' ? maps.can : name === 'mouse-laptop-screen' ? maps.windows : name === 'macbook-screen' ? maps.mac : maps.youtube;
+      const map = ink ? maps[name.replace('-key-legends', '')] : name === 'mouse-palmrest-decals' ? maps.mouseDecals : name === 'clock-screen' ? maps.clock : name === 'can-body' ? maps.can : null;
       if (name === 'can-body') {
         object.material = new THREE.MeshPhysicalMaterial({ map, roughness: .5, metalness: .65, clearcoat: .08, clearcoatRoughness: .4 });
       } else if (name === 'clock-screen') object.material = new THREE.MeshStandardMaterial({ map, roughness: .75, metalness: 0 });
       else if (name === 'mouse-palmrest-decals') object.material = new THREE.MeshStandardMaterial({ map, transparent: true, roughness: .52, metalness: .12, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
       else if (ink) object.material = new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1 });
       // Keep the display in front of its cover glass at every view distance.
-      else object.material = new THREE.MeshBasicMaterial({ map, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
-      if (name === 'mouse-laptop-screen') screens.configureMouseMaterial(object.material);
+      // Its map is assigned after the screen artwork loads, before the first render.
+      else object.material = new THREE.MeshBasicMaterial({ toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
       if (['monitor-screen', 'macbook-screen', 'mouse-laptop-screen', 'clock-screen'].includes(name)) changingMeshes.push(object);
       if (deviceLabels[name]) {
         object.userData.action = name === 'macbook-screen' ? 'notes' : name;
@@ -156,12 +154,33 @@ try {
     }
   });
   scene.add(model);
-  const surfaceNames = { 'monitor-screen': 'screen', 'mouse-laptop-screen': 'windows', 'macbook-screen': 'mac', 'ipad-screen': 'youtube' };
   // Cycles has already integrated static lighting into the texture atlas.
   scene.add(new THREE.HemisphereLight('#dce9ff', '#94785b', 1.8));
   const labelLight = new THREE.DirectionalLight('#ffe0c5', 3.0); labelLight.position.set(-2, 3, 2); scene.add(labelLight);
-  const roomRenderer = createRoomRenderer(renderer, scene, changingMeshes);
   const camera = new THREE.PerspectiveCamera(screenView.fov, 1, screenView.near, 30);
+  // While the screen artwork downloads, prepare the baked room's shaders and atlases
+  // exactly as the first render would; the final scene and its programs are unchanged.
+  for (const map of [daylight, occlusion, roomDaylight, roomOcclusion, weave]) renderer.initTexture(map);
+  const roomPrograms = Promise.all(model.children.filter(object => object.userData.atlas).map(object => renderer.compileAsync(object, camera, scene)));
+  const [screens] = await Promise.all([createScreens(() => {
+    // Choose the first raster after image decoding, using the same view and
+    // resize threshold as sharpenVisibleScreens, before allocating its artwork.
+    const { width, height } = host.getBoundingClientRect();
+    if (!(width > 0 && height > 0)) return nativeWidths.screen;
+    const view = new THREE.PerspectiveCamera(lensFov(screenViewFov(width / height), 1), width / height, screenView.near, 30);
+    const pose = screenViewPose();
+    view.position.copy(pose.position); view.quaternion.copy(pose.rotation); view.updateMatrixWorld(true);
+    const minimum = Math.min(width, height) >= 600 ? 8192 : nativeWidths.screen;
+    const requested = displayTextureWidth(displayPixelWidth(deviceFrames['monitor-screen'], view, width, height) * displayPixelRatio(width, height), 32 / 9, minimum, renderer.capabilities.maxTextureSize);
+    return requested > nativeWidths.screen || requested < nativeWidths.screen * .65 ? requested : nativeWidths.screen;
+  }, screenAssets), roomPrograms]);
+  // The clock was drawn before the screens loaded; show the current second when the desk appears.
+  drawClock(maps.clock.image.getContext('2d'), maps.clock.image.width, maps.clock.image.height);
+  maps.clock.needsUpdate = true;
+  for (const map of Object.values(screens.maps)) { map.flipY = false; map.anisotropy = renderer.capabilities.getMaxAnisotropy(); }
+  for (const [device, surface] of Object.entries(surfaceNames)) if (deviceMeshes[device]) deviceMeshes[device].material.map = screens.maps[surface];
+  if (deviceMeshes['mouse-laptop-screen']) screens.configureMouseMaterial(deviceMeshes['mouse-laptop-screen'].material);
+  const roomRenderer = createRoomRenderer(renderer, scene, changingMeshes);
   const target = new THREE.Vector3(...screenView.target);
   const fit = camera.clone();
   const wantedTarget = target.clone();
@@ -581,5 +600,6 @@ try {
 } catch (error) {
   status.textContent = 'The 3D desk is unavailable here. The notes are ready to read.';
   hint.textContent = '';
+  screenAssets.then(({ mouse }) => mouse.dispose(), () => {});
   console.warn('Desk could not initialize:', error);
 }

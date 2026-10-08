@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { displayFrame, displayPose } from '../assets/js/device-focus.js';
 import { screenView, screenViewPose, screenViewFov, lensFov, inspectedScreenPose } from '../assets/js/screen-view.js';
 
@@ -15,7 +16,7 @@ test('screen view looks around from one chair position and retains portrait fitt
   for (const x of screenView.lookX) for (const y of screenView.lookY) aims.push(new THREE.Vector3(x, y, screenView.target[2]));
 
   const bytes = await readFile(new URL('../assets/scene/workstation.glb', import.meta.url));
-  const { scene } = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
+  const { scene } = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
   scene.updateMatrixWorld(true);
   const screens = {};
   scene.traverse(object => { if (object.isMesh && ['monitor-screen', 'macbook-screen', 'mouse-laptop-screen', 'ipad-screen'].includes(object.userData.dynamic)) screens[object.userData.dynamic] = object; });

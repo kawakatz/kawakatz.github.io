@@ -7,21 +7,24 @@ import { MAC_DOCK_ICON_KEYS } from './mac-dock.js';
 // Carry the build version into image URLs so replaced screenshots cannot reuse an older build's cache.
 const screenAsset = file => new URL(`../../scene/${file}`, import.meta.url).href + new URL(import.meta.url).search;
 
-export async function createScreens(initialResearchWidth) {
+// Opaque, untagged screenshots are lossless WebP; the rest keep PNG for their alpha edges or colour chunks.
+const references = ['codex-empty.png', 'codex-working.webp', 'codex-completed.webp', 'codex-computer.webp', 'edge.png', 'ghidra.png', 'ghidra-function.png', 'ghidra-variable.png', 'ghidra-references.png',
+  'caido-history.png', 'caido-replay.png', 'caido-history-menu.png', 'caido-history-dialog.png', 'caido-replay-menu.png', 'caido-replay-dialog.png'];
+
+// Starts every screen download and decode; createScreens draws once the desk can size them.
+export async function loadScreens() {
   const wallpaper = new Image(), macDesktop = new Image(), companion = new Image();
-  wallpaper.src = screenAsset('app-reference/dell-desktop.png');
-  macDesktop.src = screenAsset('app-reference/mac-desktop.png');
+  wallpaper.src = screenAsset('app-reference/dell-desktop.webp');
+  macDesktop.src = screenAsset('app-reference/mac-desktop.webp');
   companion.src = screenAsset('codex-spritesheet-v4.webp');
   const rdpImages = {};
-  for (const [name, file] of [['desktop', 'rdp-desktop.webp'], ['calculator', 'rdp-calculator.png']]) {
+  for (const [name, file] of [['desktop', 'rdp-desktop.webp'], ['calculator', 'rdp-calculator.webp']]) {
     const image = new Image(); image.src = screenAsset(file);
     rdpImages[name] = image;
   }
-  const references = Promise.all(['codex-empty', 'codex-working', 'codex-completed', 'codex-computer', 'edge', 'ghidra', 'ghidra-function', 'ghidra-variable', 'ghidra-references',
-    'caido-history', 'caido-replay', 'caido-history-menu', 'caido-history-dialog', 'caido-replay-menu', 'caido-replay-dialog',
-  ].map(async name => {
-    const image = new Image(); image.src = screenAsset(`app-reference/${name}.png`);
-    await image.decode(); return [`ref-${name}`, image];
+  const referenceImages = Promise.all(references.map(async file => {
+    const image = new Image(); image.src = screenAsset(`app-reference/${file}`);
+    await image.decode(); return [`ref-${file.replace(/\.\w+$/, '')}`, image];
   }));
   const [entries, mouse, referenceEntries] = await Promise.all([
     Promise.all(MAC_DOCK_ICON_KEYS.map(async name => {
@@ -29,13 +32,17 @@ export async function createScreens(initialResearchWidth) {
       await image.decode(); return [name, image];
     })),
     createMouseVideo(),
-    references,
+    referenceImages,
     wallpaper.decode(),
     macDesktop.decode(),
     companion.decode(),
     ...Object.values(rdpImages).map(image => image.decode()),
   ]);
-  const icons = Object.fromEntries([...entries, ...referenceEntries]);
+  return { wallpaper, macDesktop, companion, rdpImages, mouse, icons: Object.fromEntries([...entries, ...referenceEntries]) };
+}
+
+export async function createScreens(initialResearchWidth, loading = loadScreens()) {
+  const { wallpaper, macDesktop, companion, rdpImages, mouse, icons } = await loading;
   const computers = createComputerScreens(wallpaper, icons, rdpImages, initialResearchWidth?.());
   const mac = createMacDesktop(macDesktop, companion);
   const tablet = document.createElement('canvas');
