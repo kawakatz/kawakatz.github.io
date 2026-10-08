@@ -15,18 +15,18 @@ test('only small touch screens redirect from the homepage before scheduling the 
     [601, 960, true, false], [768, 1024, true, false], [1440, 900, false, false],
     [390, 844, false, false], [1920, 1080, true, false],
   ]) {
-    const routes = [], listeners = [];
+    const routes = [], scripts = [];
     runInNewContext(entry[1], {
       screen: { width, height },
       matchMedia(query) { assert.equal(query, '(any-pointer: coarse)'); return { matches: touch }; },
       location: { replace(url) { routes.push(url); } },
-      document: { addEventListener(...args) { listeners.push(args); } },
+      document: { createElement(name) { assert.equal(name, 'script'); return {}; }, head: { append(element) { scripts.push(element); } } },
     });
     assert.deepEqual(routes, redirect ? ['/notes/'] : [], `${width}×${height}, touch=${touch}`);
-    assert.equal(listeners.length, redirect ? 0 : 1, 'Phones must not schedule the desk import');
+    assert.equal(scripts.length, redirect ? 0 : 1, 'Phones must not schedule the desk import');
     if (!redirect) {
-      assert.equal(listeners[0][0], 'DOMContentLoaded');
-      assert.equal(listeners[0][2].once, true);
+      assert.equal(scripts[0].type, 'module');
+      assert.match(scripts[0].src, /^\/assets\/js\/dist\/desk\.js\?v=\d+$/, 'Desktop starts the versioned desk module while the page parses');
     }
   }
   for (const path of ['notes/index.html', 'others/index.html', 'about/index.html', 'notes/okta-terrify-vs-macos/index.html']) {

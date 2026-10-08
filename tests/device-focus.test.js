@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { readFile } from 'node:fs/promises';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createWorkstation, overview } from '../assets/js/workstation.js';
 import { displayFrame, displayPose, displayPixelWidth, displayZoomMinimum, displayPixelRatio, displayTextureWidth } from '../assets/js/device-focus.js';
 import { screenViewPose, screenViewFov } from '../assets/js/screen-view.js';
@@ -97,7 +98,7 @@ test('device close-ups face the real display and keep every edge visible after e
 
 test('Dell starts with dense default artwork and preserves readable maximum zoom across viewport changes', async () => {
   const bytes = await readFile(new URL('../assets/scene/workstation.glb', import.meta.url));
-  const { scene } = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
+  const { scene } = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
   let screen;
   scene.traverse(object => { if (object.userData.dynamic === 'monitor-screen') screen = object; });
   const frame = displayFrame(screen);

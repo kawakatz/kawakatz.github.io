@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { displayFrame, displayPose } from '../assets/js/device-focus.js';
 import { screenViewPose, screenViewFov } from '../assets/js/screen-view.js';
 import { quadTransform } from '../assets/js/navigation.js';
@@ -10,7 +11,7 @@ import { createIPadVideo, videoViewport } from '../assets/js/ipad-video.js';
 
 test('the actual iPad projection preserves player corners on desktop and mobile', async t => {
   const bytes = await readFile(new URL('../assets/scene/workstation.glb', import.meta.url));
-  const { scene } = await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
+  const { scene } = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), '');
   t.after(() => scene.traverse(object => {
     if (!object.isMesh) return;
     object.geometry.dispose();
