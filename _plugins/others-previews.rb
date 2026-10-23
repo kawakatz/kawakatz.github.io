@@ -33,8 +33,9 @@ module OthersPreviews
     end
   end
 
-  def thumbnail(data, pdf, cache)
-    name = "#{Digest::SHA256.hexdigest(data)[0, 20]}.webp"
+  # `top` fills the card's 16:9 frame and keeps the top of the picture, as for a book cover.
+  def thumbnail(data, pdf, cache, top: false)
+    name = "#{Digest::SHA256.hexdigest(data)[0, 20]}#{'-top' if top}.webp"
     output = File.join(cache, name)
     return name if File.file?(output)
     Dir.mktmpdir('others-preview-') do |tmp|
@@ -46,7 +47,8 @@ module OthersPreviews
       end
       converter = ENV.fetch('PATH', '').split(File::PATH_SEPARATOR).any? { |dir| File.executable?(File.join(dir, 'magick')) } ? 'magick' : 'convert'
       result = File.join(tmp, 'preview.webp')
-      run(converter, '-limit', 'memory', '128MiB', '-limit', 'map', '256MiB', "#{input}[0]", '-auto-orient', '-thumbnail', '800x450>', '-strip', '-quality', '82', result)
+      size = top ? ['-thumbnail', '800x450^', '-gravity', 'north', '-extent', '800x450'] : ['-thumbnail', '800x450>']
+      run(converter, '-limit', 'memory', '128MiB', '-limit', 'map', '256MiB', "#{input}[0]", '-auto-orient', *size, '-strip', '-quality', '82', result)
       FileUtils.mv(result, output)
     end
     name
@@ -57,11 +59,23 @@ module OthersPreviews
     raise "#{command.first}: #{error.lines.first.to_s.strip}" unless status.success?
   end
 
-  def preview(href, source, baseurl, cache, previous)
+  def local_file(href, source, baseurl)
+    path = Pathname.new(File.join(source, URI::DEFAULT_PARSER.unescape(URI(href).path.delete_prefix(baseurl)).delete_prefix('/'))).realpath
+    raise 'Local previews must stay inside the site source' unless path.to_s.start_with?(File.realpath(source) + '/')
+    path
+  end
+
+  # `image` is a local picture for pages that publish none, such as Amazon book pages.
+  def preview(href, source, baseurl, cache, previous, image = nil)
     uri = URI(href)
+    if image
+      path = local_file(image, source, baseurl)
+      raise 'Preview images must be JPEG, PNG or WebP' unless %w[.jpg .jpeg .png .webp].include?(path.extname.downcase)
+      return { 'label' => uri.host ? uri.host.delete_prefix('www.') : 'PDF', 'image' => thumbnail(path.binread, false, cache, top: true) }
+    end
     if uri.host.nil?
-      path = Pathname.new(File.join(source, URI::DEFAULT_PARSER.unescape(uri.path.delete_prefix(baseurl)).delete_prefix('/'))).realpath
-      raise 'Local previews must be PDFs inside the site source' unless path.to_s.start_with?(File.realpath(source) + '/') && path.extname.downcase == '.pdf'
+      path = local_file(href, source, baseurl)
+      raise 'Local previews must be PDFs inside the site source' unless path.extname.downcase == '.pdf'
       return { 'label' => 'PDF', 'image' => thumbnail(path.binread, true, cache) }
     end
     if previous && Time.now.to_i - previous.fetch('checked_at', 0) < 86_400 && (!previous['image'] || File.file?(File.join(cache, previous['image'])))
@@ -103,8 +117,9 @@ module OthersPreviews
         link.add_child(label)
       end
       href = link['href']
+      image = link.remove_attribute('data-preview-source')&.value
       next unless href.start_with?('/', 'https://', 'http://')
-      entry = current[href] ||= preview(href, site.source, baseurl, cache, saved[href])
+      entry = current[href] ||= preview(href, site.source, baseurl, cache, saved[href], image)
       link['data-preview'] = entry.fetch('label')
       link.remove_attribute('data-preview-image')
       next unless entry['image'] && File.file?(File.join(cache, entry['image']))

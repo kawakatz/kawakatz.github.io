@@ -219,6 +219,8 @@ exclude:
   - concepts
   - tests
   - node_modules
+  # Sources for Others preview thumbnails; only the generated thumbnails are published.
+  - assets/img/others
   - assets/js/can.js
   - assets/js/clock.js
   - assets/js/computer-screens.js

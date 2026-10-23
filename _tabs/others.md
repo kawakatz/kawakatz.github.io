@@ -26,3 +26,9 @@ order: 2
 
 <time datetime="2024-05-11">May 11</time>[App Sandbox Escape vulnerability in macOS (CVE-2023-27966)&nbsp;<span aria-hidden="true">↗</span>](https://gmo-cybersecurity.com/blog/cve-2023-27966-english)
 {: .work-entry id="app-sandbox-escape-vulnerability-in-macos-cve-2023-27966"}
+
+## 2021
+{: .work-year}
+
+<time datetime="2021-07-28">Jul 28</time>[The Penetration Testing Textbook&nbsp;<span aria-hidden="true">↗</span>](https://www.amazon.co.jp/dp/4781702473){: data-preview-source="{{ '/assets/img/others/penetration-test-textbook.jpg' | relative_url }}"}
+{: .work-entry id="ペネトレーションテストの教科書-japanese"}
