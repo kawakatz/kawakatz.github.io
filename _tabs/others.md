@@ -30,5 +30,5 @@ order: 2
 ## 2021
 {: .work-year}
 
-<time datetime="2021-07-28">Jul 28</time>[Penetration Testing Textbook&nbsp;<span aria-hidden="true">↗</span>](https://www.amazon.co.jp/dp/4781702473){: data-preview-source="{{ '/assets/img/others/penetration-test-textbook.jpg' | relative_url }}"}
+<time datetime="2021-07-28">Jul 28</time>[The Penetration Testing Textbook&nbsp;<span aria-hidden="true">↗</span>](https://www.amazon.co.jp/dp/4781702473){: data-preview-source="{{ '/assets/img/others/penetration-test-textbook.jpg' | relative_url }}"}
 {: .work-entry id="ペネトレーションテストの教科書-japanese"}
